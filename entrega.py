@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # # TP: Cuidado! Lluvia de Hamburgesas - Primera Entrega
 
 # ### Introducción
