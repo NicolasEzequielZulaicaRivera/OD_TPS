@@ -37,7 +37,12 @@ for label in labels:
 
 
 def cmpNonNumeric(label):
-    df2 = df[[label,'llovieron_hamburguesas_al_dia_siguiente']].groupby(label)['llovieron_hamburguesas_al_dia_siguiente'].value_counts().unstack()
+    df2 = (
+        df[[label, 'llovieron_hamburguesas_al_dia_siguiente']]
+        .groupby(label)['llovieron_hamburguesas_al_dia_siguiente']
+        .value_counts()
+        .unstack()
+    )
     df2.plot(kind='bar', stacked=True)
 
 
