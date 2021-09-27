@@ -37,21 +37,13 @@ for label in labels:
 
 
 def cmpNonNumeric(label):
-    plt.figure(dpi=150)
-    plt.title(label)
-    sns.boxplot(
-        data=df,
-        y=label,
-        x='llovieron_hamburguesas_al_dia_siguiente',
-        palette=['#D17049', "#89D15E"],
-        showfliers=False,
-    )
-    plt.ylabel(label)
-    plt.show()
+    df2 = df[[label,'llovieron_hamburguesas_al_dia_siguiente']].groupby(label)['llovieron_hamburguesas_al_dia_siguiente'].value_counts().unstack()
+    df2.plot(kind='bar', stacked=True)
 
 
 labels = df.select_dtypes(exclude=np.number).columns.tolist()
 labels.remove('dia')
-labels
+labels.remove('llovieron_hamburguesas_al_dia_siguiente')
 
-label = 'direccion_viento_tarde'
+for label in labels:
+    cmpNonNumeric(label)
