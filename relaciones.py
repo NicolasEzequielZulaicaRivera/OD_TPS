@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# ## Imports
+
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
@@ -6,6 +8,8 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 
 sns.set()
+
+# #### Dataset
 
 features = pd.read_csv("datasets/features.csv", low_memory=False)
 
@@ -16,6 +20,21 @@ df['presion_atmosferica_tarde'] = pd.to_numeric(
     df['presion_atmosferica_tarde'], errors='coerce'
 )
 
+df.replace({'llovieron_hamburguesas_al_dia_siguiente': {'si': 100, 'no': 0}},inplace=True)
+
+# ## Relaciones
+
+# ### Analisis Exploratorio
+
+# #### Cual es el porcentaje de lluvia de hamburguesas ?
+
+burger_mean = df['llovieron_hamburguesas_al_dia_siguiente'].mean()
+burger_mean
+
+
+# #### Features Numericas
+
+# ##### Analisis 1
 
 def cmpNumeric(label):
     plt.figure(dpi=150)
@@ -35,6 +54,30 @@ labels = df.select_dtypes(include=np.number).columns.tolist()
 for label in labels:
     cmpNumeric(label)
 
+# ##### Observaciones 1
+
+# Se nota que algunas features tienen tendencias mas marcadas que otras.
+#
+# Estas son las que parecieran mas relevantes y sus puntos de inflexion.
+#
+# * Horas de sol: 7 (si / no)
+# * Humedad tarde: 60 (no /si)
+# * mm lluvia: 1 (no / si)
+# * Nubosidad tarde: 7 (no / si)
+
+# ##### Analisis 2
+
+# ##### Observaciones 2
+
+# TODO
+
+# #### Features Categoricas
+
+labels = df.select_dtypes(exclude=np.number).columns.tolist()
+labels.remove('dia')
+
+
+# ##### Analisis 1
 
 def cmpNonNumeric(label):
     df2 = (
@@ -46,9 +89,43 @@ def cmpNonNumeric(label):
     df2.plot(kind='bar', stacked=True)
 
 
-labels = df.select_dtypes(exclude=np.number).columns.tolist()
-labels.remove('dia')
-labels.remove('llovieron_hamburguesas_al_dia_siguiente')
-
 for label in labels:
     cmpNonNumeric(label)
+
+
+# ##### Observaciones 1
+
+# Estos graficos son horribles
+#
+# Se ve que ( llovieron_hamburguesas_al_dia_siguiente == si ) es mas probable si  ( llovieron_hamburguesas_hoy  == si )
+
+# ##### Analisis 2
+
+def cmpNonNumeric2(label):
+    
+    height = max( 3, len(df[label].unique()) *0.2 )
+    plt.figure(dpi=150, figsize=(5, height) )
+    
+    plt.title("% de lluvia de haburguesas segun "+label)
+
+    df2 = df[ [label,"llovieron_hamburguesas_al_dia_siguiente"] ].groupby(label).mean().sort_values("llovieron_hamburguesas_al_dia_siguiente")
+    sns.barplot(y=df2.index, x="llovieron_hamburguesas_al_dia_siguiente", data=df2)
+    plt.axvline(burger_mean, 0, 1)
+
+    plt.show()
+
+
+for label in labels:
+    cmpNonNumeric2(label)
+
+# ##### Observaciones 2
+
+# Todas parecieran ponderar, entre una opcion y otra puede haber el doble de % de casos de lluvia de 🍔
+#
+# De especial utilidad llovieron_hamburguesas_hoy, que es simple y se nota que el triple del % cuando es 'si' que cuando es 'no'
+
+# #### Feature Dia
+
+# ##### Analisis
+
+# ##### Observaciones
