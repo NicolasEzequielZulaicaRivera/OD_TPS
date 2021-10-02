@@ -103,4 +103,3 @@ def knn_imputer(df):
 
 
 knn_imputer(df.head(10000)).add_suffix('_knn')
-# -

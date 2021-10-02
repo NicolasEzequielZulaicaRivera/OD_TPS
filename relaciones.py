@@ -67,6 +67,33 @@ for label in labels:
 
 # ##### Analisis 2
 
+labels = ["horas_de_sol","humedad_tarde","mm_lluvia_dia","nubosidad_tarde"]
+means = []
+for label in labels :
+    means.append( df[[label,"llovieron_hamburguesas_al_dia_siguiente"]][ df[label].isna() ].mean()['llovieron_hamburguesas_al_dia_siguiente'] )
+df_missings = pd.DataFrame(
+    {'Label': labels, 'llovieron_hamburguesas_al_dia_siguiente': means}
+).sort_values(by="llovieron_hamburguesas_al_dia_siguiente", ascending=False)
+
+# +
+
+plt.figure()
+
+plt.title("% de lluvia de haburguesas cuando 'Label' es Nan")
+sns.barplot( y="Label", x="llovieron_hamburguesas_al_dia_siguiente", data=df_missings )
+plt.axvline(burger_mean, 0, 1)
+
+plt.show()
+# -
+
+for label in labels:
+    plt.figure()
+    plt.title("")
+    sns.histplot( data=df, x=label, bins=10, hue="llovieron_hamburguesas_al_dia_siguiente" )
+    plt.show()
+
+# Que el valor sea Nan solo parece aportar info relevante para mm_lluvia_dia
+
 # ##### Observaciones 2
 
 # TODO
