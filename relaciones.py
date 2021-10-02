@@ -67,6 +67,7 @@ for label in labels:
 
 # ##### Analisis 2
 
+# +
 labels = ["horas_de_sol","humedad_tarde","mm_lluvia_dia","nubosidad_tarde"]
 means = []
 for label in labels :
@@ -74,6 +75,8 @@ for label in labels :
 df_missings = pd.DataFrame(
     {'Label': labels, 'llovieron_hamburguesas_al_dia_siguiente': means}
 ).sort_values(by="llovieron_hamburguesas_al_dia_siguiente", ascending=False)
+
+df.info()
 
 # +
 
