@@ -53,6 +53,7 @@ len(df[df.duplicated(keep=False)])
 
 missings = df.isna().sum()
 missings_porcentaje = missings * 100 / len(df)
+missings_porcentaje.to_frame()
 df_missings = pd.DataFrame(
     {'Missings': missings, 'Missings en porcentaje': missings_porcentaje}
 ).sort_values(by="Missings", ascending=False)
@@ -62,44 +63,63 @@ df_missings
 
 df_missings[df_missings["Missings en porcentaje"] > 15]
 
+# Si vemos de esas columnas, en cuanta cantidad tienen `0`s en comparación con `NaN`s
 
-# Cómo las columnas `nubosidad_temprano` y `nubosidad_tarde` están relacionadas entre sí, podemos usar KNN para rellenar los nulls
+cols_con_missings = df_missings[df_missings["Missings en porcentaje"] > 15].index
+cant_nans = []
+cant_cero = []
+cant_comun = []
+for col in cols_con_missings:
+    cant_cero.append(df[df[col] == 0].size)
+    cant_nans.append(df[df[col].isna()].size)
+    cant_comun.append(df[~(df[col].isna()) & ~(df[col] == 0)].size)
+df_missings_cant = pd.DataFrame(
+    data={
+        'Columna con missings': cols_con_missings,
+        'Cantidad de NaNs': cant_nans,
+        'Cantidad de ceros': cant_cero,
+        'Cantidad de otros valores': cant_comun,
+    }
+)
+df_missings_cant
+
+# En porcentaje
+
+100 * df_missings_cant['Cantidad de ceros'] / df_missings_cant['Cantidad de NaNs']
+
+# Se podría asumir que, con los pocos datos que hay con valores 0 en `horas_de_sol` y `mm_evaporados_agua`, en estos casos `NaN` pueden indicar el mismo valor
+#
+# Por lo que procedemos a sustituirlos
+
+columnas = ['horas_de_sol', 'mm_evaporados_agua']
+for col in columnas:
+    df[col].replace(np.nan, 0, inplace=True)
+
+# ## Conversión a variables categóricas
+
+# De las columnas en string que tiene el dataset, las de `direccion_viento_temprano` y `direccion_viento_tarde` resultan las más categorizables, ya que se pueden traducir a ángulos cartesianos según los [puntos del compás](https://es.wikipedia.org/wiki/Puntos_del_comp%C3%A1s)
 
 # +
-def hashing_encoding(df, cols, data_percent=0.85, verbose=False):
-    for i in cols:
-        val_counts = df[i].value_counts(dropna=False)
-        s = sum(val_counts.values)
-        h = val_counts.values / s
-        c_sum = np.cumsum(h)
-        c_sum = pd.Series(c_sum)
-        n = c_sum[c_sum > data_percent].index[0]
-        if verbose:
-            print("n hashing para ", i, ":", n)
-        if n > 0:
-            fh = FeatureHasher(n_features=n, input_type='string')
-            hashed_features = fh.fit_transform(
-                df[i].astype(str).values.reshape(-1, 1)
-            ).todense()
-            df = df.join(pd.DataFrame(hashed_features).add_prefix(i + '_'))
+puntos_del_compas = {
+    'Norte': 0,
+    'Nornoreste': 22.5,
+    'Noreste': 45,
+    'Estenoreste': 67.5,
+    'Este': 90,
+    'Estesureste': 112.5,
+    'Sureste': 135,
+    'Sursureste': 157.5,
+    'Sur': 180,
+    'Sursuroeste': 202.5,
+    'suroeste': 225,
+    'Oestesuroeste': 247.5,
+    'Oeste': 270,
+    'Oestenoroeste': 292.5,
+    'Noroeste': 315,
+}
+columnas_viento = ['direccion_viento_temprano', 'direccion_viento_tarde']
 
-    return df.drop(columns=cols)
-
-
-def knn_imputer(df):
-
-    cat_cols = ['nubosidad_temprano', 'nubosidad_tarde']
-
-    # Aplicamos hashing para las categoricas
-    df = hashing_encoding(df, cat_cols)
-
-    # Eliminamos variables no categóricas para imputar
-    df = df.drop(columns=df.select_dtypes(include=[object]))
-
-    # definimos un n arbitrario
-    imputer = KNNImputer(n_neighbors=2, weights="uniform")
-    df = pd.DataFrame(imputer.fit_transform(df), columns=df.columns)
-    return df
-
-
-knn_imputer(df.head(10000)).add_suffix('_knn')
+for columna_viento in columnas_viento:
+    for punto in puntos_del_compas.keys():
+        df[columna_viento].replace(punto, puntos_del_compas[punto], inplace=True)
+# -
