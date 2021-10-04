@@ -178,3 +178,5 @@ plt.axvline(burger_mean, 0, 1)
 plt.show()
 
 # ##### Observaciones
+
+# No tiene mucha relevancia

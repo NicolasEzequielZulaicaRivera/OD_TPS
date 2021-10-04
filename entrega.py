@@ -13,6 +13,8 @@ import pandas as pd
 import numpy as np
 import re
 from matplotlib import pyplot as plt
+import seaborn as sns
+sns.set()
 
 # En el princpio se optó por mantener los dos datasets en el mismo DataFrame, para tener mas comodidad
 
@@ -61,14 +63,6 @@ df_missings = pd.DataFrame(
     {'Missings': missings, 'Missings en porcentaje': missings_porcentaje}
 ).sort_values(by="Missings", ascending=False)
 df_missings
-
-# Se podría asumir que, con los pocos datos que hay con valores 0 en `horas_de_sol` y `mm_evaporados_agua`, en estos casos `NaN` pueden indicar el mismo valor
-#
-# Por lo que procedemos a sustituirlos
-
-columnas = ['horas_de_sol', 'mm_evaporados_agua']
-for col in columnas:
-    df[col].replace(np.nan, 0, inplace=True)
 
 # ### Columnas con diferentes horarios
 
@@ -152,10 +146,80 @@ columnas_viento = ['direccion_viento_temprano', 'direccion_viento_tarde']
 
 for columna_viento in columnas_viento:
     for punto in puntos_del_compas.keys():
-        df[columna_viento].replace(punto, puntos_del_compas[punto], inplace=True)
+        df[columna_viento+'_num'] = df[columna_viento].replace(punto, puntos_del_compas[punto])
 # -
 
 # ## Análisis de los datos
+
+# En esta seccion buscamos responder la pregunta: **Que relacion hay entre los features y el target?**
+#
+# Este análisis extensivo puede verse en [relaciones.py](relaciones.py), a continación se marcarán los puntos más importantes.
+
+# ### Analisis Inicial
+
+# En principio queremos saber : **Cual es la probabilidad de que lluevan hamburguesas?** para luego poder tomar ese valor de referencia.
+#
+# Aparte de eso, hacemos algunas transformaciones que seran de utilidad.
+
+df.dropna(subset=['llovieron_hamburguesas_al_dia_siguiente'],inplace=True)
+
+df['llovieron_hamburguesas_al_dia_siguiente_n'] = df.replace({'llovieron_hamburguesas_al_dia_siguiente': {'si': 100, 'no': 0}})['llovieron_hamburguesas_al_dia_siguiente']
+
+burger_mean = df['llovieron_hamburguesas_al_dia_siguiente_n'].mean()
+burger_mean
+
+# ### Analisis de features numericas
+
+num_labels = ["horas_de_sol","humedad_tarde","mm_lluvia_dia","nubosidad_tarde"]
+
+
+def cmpNumeric(label):
+    plt.figure(dpi=150)
+    plt.title(label)
+    sns.boxplot(
+        data=df,
+        y=label,
+        x='llovieron_hamburguesas_al_dia_siguiente',
+        palette=['#D17049', "#89D15E"],
+        showfliers=False,
+    )
+    plt.ylabel(label)
+    plt.show()
+
+
+for label in num_labels:
+    cmpNumeric(label)
+
+# #### Filtros en variables numericas
+
+# Notamos ciertos puntos de inflexion en los graficos previos, a partir de ello nos preguntamos : **Cual es la probabilidad de que llueva pasado ese punto?**.
+
+# +
+df_num = pd.DataFrame(
+    {
+        'filtro':[
+            "promedio normal",
+            "horas_de_sol < 7",
+            "humedad_tarde > 60",
+            "mm_lluvia_dia is Nan",
+            "nubosidad_tarde > 7",
+        ],
+        '%_llovieron_hamburguesas':[
+            burger_mean,
+            df[ (df['horas_de_sol']<7) ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
+            df[ (df['humedad_tarde']>60) ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
+            df[ (df['mm_lluvia_dia'].isna()) ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
+            df[ (df['nubosidad_tarde'] > 7) ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
+        ]
+    }
+).sort_values(by="%_llovieron_hamburguesas", ascending=False)
+
+plt.figure(dpi=150, figsize=(3, 2))
+sns.barplot( data=df_num, y='filtro', x='%_llovieron_hamburguesas')
+plt.axvline(burger_mean, 0, 1, color="#000")
+plt.show()
+df_num
+# -
 
 # ## Conclusiones
 
