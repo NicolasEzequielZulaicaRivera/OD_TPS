@@ -59,6 +59,37 @@ df_missings = pd.DataFrame(
 ).sort_values(by="Missings", ascending=False)
 df_missings
 
+# ### Tipos de variables
+
+# Se puede ver que en la columna `presion_atmosferica_tarde` el tipo no es numérico
+
+df['presion_atmosferica_tarde'].dtype
+
+# Por lo que procedemos a reemplzar los valores no numéricos a `NaN`
+
+# df['presion_atmosferica_tarde'].astype('float64')
+try:
+    df['presion_atmosferica_tarde'].astype('float64')
+except ValueError as error:
+    print('Error: ', error)
+
+
+# Surgió un error con un valor mal cargado, asi que casteamos los valores mal cargados a `NaN`
+
+# +
+def cast_to_float(x):
+    try:
+        return float(x)
+    except ValueError:
+        return 'NaN'
+
+
+df['presion_atmosferica_tarde'] = df['presion_atmosferica_tarde'].apply(cast_to_float)
+df['presion_atmosferica_tarde'] = df['presion_atmosferica_tarde'].astype('float64')
+# -
+
+# ### Columnas con muchos missings
+
 # Se puede ver que las columnas con missings mayores a 15% son
 
 df_missings[df_missings["Missings en porcentaje"] > 15]
@@ -95,6 +126,67 @@ columnas = ['horas_de_sol', 'mm_evaporados_agua']
 for col in columnas:
     df[col].replace(np.nan, 0, inplace=True)
 
+# ### Columnas con diferentes horarios
+
+# Se puede observar como hay varias columnas en las que las mediciones fueron hechas temprano, y otras en la tarde.
+#
+# Podemos reemplazar los missings de estas columnas con el valor que deberían tener en sus horarios opuestos
+#
+# Vemos la relación que tienen entre sí en promedio
+
+# +
+columnas = [
+    'humedad',
+    'nubosidad',
+    'presion_atmosferica',
+    'temperatura',
+    'velocidad_viendo',
+]
+relacion_horarios = {}
+for columna in columnas:
+    col_tempr = columna + '_temprano'
+    col_tarde = columna + '_tarde'
+    relacion_horarios[col_tempr] = (
+        df[df[col_tempr].notna()][col_tempr] - df[df[col_tempr].notna()][col_tarde]
+    ).mean()
+    relacion_horarios[col_tarde] = (
+        df[df[col_tarde].notna()][col_tarde] - df[df[col_tarde].notna()][col_tempr]
+    ).mean()
+
+pd.DataFrame(relacion_horarios, index=[0])
+# -
+# Entonces, con estos datos podemos llenar los faltantes en el caso de que una de las dos columnas tenga `NaN`
+
+
+# +
+def llenar_nans_con_horario_alterno(fila, columna, columna_alt):
+    if np.isnan(fila[columna]):
+        if np.isnan(fila[columna_alt]):
+            return np.nan
+        return relacion_horarios[columna] + fila[columna_alt]
+    return fila[columna]
+
+
+columnas = [
+    'humedad',
+    'nubosidad',
+    'presion_atmosferica',
+    'temperatura',
+    'velocidad_viendo',
+]
+for columna in columnas:
+    col_tempr = columna + '_temprano'
+    col_tarde = columna + '_tarde'
+    df[col_tempr] = df.apply(
+        lambda fila: llenar_nans_con_horario_alterno(fila, col_tempr, col_tarde), axis=1
+    )
+    df[col_tarde] = df.apply(
+        lambda fila: llenar_nans_con_horario_alterno(fila, col_tarde, col_tempr), axis=1
+    )
+# -
+
+df['humedad_temprano'].isna()
+
 # ## Conversión a variables categóricas
 
 # De las columnas en string que tiene el dataset, las de `direccion_viento_temprano` y `direccion_viento_tarde` resultan las más categorizables, ya que se pueden traducir a ángulos cartesianos según los [puntos del compás](https://es.wikipedia.org/wiki/Puntos_del_comp%C3%A1s)
@@ -122,4 +214,3 @@ columnas_viento = ['direccion_viento_temprano', 'direccion_viento_tarde']
 for columna_viento in columnas_viento:
     for punto in puntos_del_compas.keys():
         df[columna_viento].replace(punto, puntos_del_compas[punto], inplace=True)
-# -
