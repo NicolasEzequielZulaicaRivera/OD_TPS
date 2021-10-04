@@ -9,8 +9,6 @@ import pandas as pd
 import numpy as np
 import re
 from matplotlib import pyplot as plt
-from sklearn.feature_extraction import FeatureHasher
-from sklearn.impute import KNNImputer
 
 df = pd.read_csv("datasets/features.csv", low_memory=False)
 
@@ -184,8 +182,6 @@ for columna in columnas:
         lambda fila: llenar_nans_con_horario_alterno(fila, col_tarde, col_tempr), axis=1
     )
 # -
-
-df['humedad_temprano'].isna()
 
 # ## Conversión a variables categóricas
 
