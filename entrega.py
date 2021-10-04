@@ -359,4 +359,6 @@ display(sld[0],sld[1],sld[2],sld[3],sld[4],sld[5],)
 # Para mejorar el rendimiento habria que mejorar el modelo.
 #
 # El modelo podria mejorar de las siguientes formas:
-# - Agregando filtros negativos (que indiquen una reduccion en la posibilidad de q)
+# - Agregando filtros negativos (que indiquen una reduccion en la posibilidad de que lluevan 🍔)
+# - Agregando filtros de otras features
+# - Agregando filtros intermedios
