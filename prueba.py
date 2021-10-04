@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
+import re
 from matplotlib import pyplot as plt
 import seaborn as sns
+sns.set()
 
 features = pd.read_csv("datasets/features.csv", low_memory=False)
 target = pd.read_csv("datasets/target.csv")
