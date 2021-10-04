@@ -67,7 +67,6 @@ for label in labels:
 
 # ##### Analisis 2
 
-# +
 labels = ["horas_de_sol","humedad_tarde","mm_lluvia_dia","nubosidad_tarde"]
 means = []
 for label in labels :
@@ -75,8 +74,6 @@ for label in labels :
 df_missings = pd.DataFrame(
     {'Label': labels, 'llovieron_hamburguesas_al_dia_siguiente': means}
 ).sort_values(by="llovieron_hamburguesas_al_dia_siguiente", ascending=False)
-
-df.info()
 
 # +
 
@@ -157,5 +154,27 @@ for label in labels:
 # #### Feature Dia
 
 # ##### Analisis
+
+df['y'] = df['dia'].map(lambda x: x.split('-')[0])
+df['m'] = df['dia'].map(lambda x: x.split('-')[1])
+df['d'] = df['dia'].map(lambda x: x.split('-')[2])
+
+plt.figure(dpi=150, figsize=(5, 3))
+plt.title("Year")
+sns.barplot( data=df, y='y', x='llovieron_hamburguesas_al_dia_siguiente', order=sorted(df['y'].unique()) )
+plt.axvline(burger_mean, 0, 1)
+plt.show()
+
+plt.figure(dpi=150, figsize=(5, 3))
+plt.title("Month")
+sns.barplot( data=df, y='m', x='llovieron_hamburguesas_al_dia_siguiente', order=sorted(df['m'].unique()) )
+plt.axvline(burger_mean, 0, 1)
+plt.show()
+
+plt.figure(dpi=150, figsize=(5, 5))
+plt.title("Day")
+sns.barplot( data=df, y='d', x='llovieron_hamburguesas_al_dia_siguiente', order=sorted(df['d'].unique()) )
+plt.axvline(burger_mean, 0, 1)
+plt.show()
 
 # ##### Observaciones
