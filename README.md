@@ -1,92 +1,14 @@
 # TPs 100199 - 105774
 
-# Guía de instalación del entorno
-La siguiente guía supone que se está usando ubuntu.
+## 2021-2C TP - Cuidado!: Lluvia de Hamburgesas
 
-## Dependencias del sistema
-Primero tenemos que asegurarnos de tener instaladas las dependencias del sistema.
+## Alumnos
 
-```bash
-# apt update
-# apt install python3 python3-dev python3-venv python3-pip
-```
+- 100199 - Ariel Leandro Aguirre
+- 105774 - Nicolas Ezequiel Zulaica Rivera
 
-## [Opcional] Crear un virtualenv
-[venv](https://docs.python.org/3/library/venv.html) es un modulo que permite crear entornos virtuales livianos de python. Esto es muy util para que no haya conflictos entre dependencias requeridas en distintos proyectos/entornos.
+## Entrega
 
-Vamos a crear un entorno virtual
-```bash
-cd <ubicacion deseada>
-virtualenv -p python3 venv
-```
+La entrega se encuentra en el archivo `entrega.py`
 
-Luego, cada vez que querramos usarlo, tendremos que activarlo
-```bash
-source <ubicacion del virtualenv>/venv/bin/activate
-```
-
-Para mayor comodidad, se puede agregar un alias con ese comando a `~/.alias` o `~/.bashrc`.
-
-## Instalar dependencias de python
-Dentro de la carpeta del repo
-```bash
-pip3 install -r requirements.txt
-```
-
-## Jupytext
-Ver PRs de notebooks es dificil, porque son JSONs. Si fueron ejecutados, además puede haber imágenes en base64 o tablas
-o texto largo. Para ayudar con este problema podemos usar [jupytext](https://jupytext.readthedocs.io/en/latest/index.html).
-Está en las dependencias incluido. En resumen, cada notebook queda ligado a un script con la metadata necesaria, y ese `.py` es el que se versiona.
-
-Para poder usarlo (asi como otras extensiones), es necesario tener instalado [node](https://nodejs.org/en/).
-
-Para activar la extension
-```bash
-jupyter serverextension enable jupytext
-jupyter lab build
-```
-
-## ToC
-Para ver mejor el árbol de contenidos:
-```bash
-jupyter labextension install @jupyterlab/toc
-jupyter lab build
-```
-
-## Jupyter widgets
-Para ver gráficos interactivos
-```bash
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
-jupyter lab build
-```
-
-## Plotly
-Para ver los graficos hechos con plotly:
-```bash
-jupyter labextension install jupyterlab-plotly@4.12.0
-jupyter labextension install @jupyter-widgets/jupyterlab-manager plotlywidget@4.12.0
-```
-
-## Levantar jupyter lab
-Estando en la carpeta del repo
-```bash
-jupyter lab
-```
-
-_Nota_: Si en los pasos anteriores usamos un `virtualenv`, hay que activarlo primero.
-
-## Cerrar jupyter lab
-Con doble `Ctrl+C` se apaga sin confirmación. Con `Ctrl+C` una sola vez, pedirá confirmación.
-
-_Nota_: Esto se debe hacer en la terminal donde hemos dejado levantado el server.
-
-# Entorno de desarrollo
-
-## Pre-commit
-Para mejorar la calidad del codigo subido, usamos [pre-commit](https://pre-commit.com), que instala varios hooks que se ejecutan
-antes de un commit o push. Estos hooks estan definidos en `.pre-commit-config.yaml`.
-
-```bash
-$ pre-commit install
-$ pre-commit install -t pre-push
-```
+Los análisis adicionales que no son de la presentación están en `limpieza.py` y `relaciones.py`
