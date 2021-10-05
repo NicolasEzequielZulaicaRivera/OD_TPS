@@ -14,6 +14,7 @@ import numpy as np
 import re
 from matplotlib import pyplot as plt
 import seaborn as sns
+
 sns.set()
 
 # En el princpio se optó por mantener los dos datasets en el mismo DataFrame, para tener mas comodidad
@@ -118,7 +119,7 @@ for columna in columnas:
     )
 # -
 
-# ### Conversión a variables categóricas
+# ### Conversión de variables categóricas
 
 # De las columnas en string que tiene el dataset, las de `direccion_viento_temprano` y `direccion_viento_tarde` resultan las más categorizables, ya que se pueden traducir a ángulos cartesianos según los [puntos del compás](https://es.wikipedia.org/wiki/Puntos_del_comp%C3%A1s)
 #
@@ -145,8 +146,9 @@ puntos_del_compas = {
 columnas_viento = ['direccion_viento_temprano', 'direccion_viento_tarde']
 
 for columna_viento in columnas_viento:
-    for punto in puntos_del_compas.keys():
-        df[columna_viento+'_num'] = df[columna_viento].replace(punto, puntos_del_compas[punto])
+    df[columna_viento + '_num'] = df.replace(
+        puntos_del_compas.keys(), puntos_del_compas.values()
+    )[columna_viento]
 # -
 
 # ## Análisis de los datos
@@ -161,16 +163,25 @@ for columna_viento in columnas_viento:
 #
 # Aparte de eso, hacemos algunas transformaciones que seran de utilidad.
 
-df.dropna(subset=['llovieron_hamburguesas_al_dia_siguiente'],inplace=True)
+df.dropna(subset=['llovieron_hamburguesas_al_dia_siguiente'], inplace=True)
 
-df['llovieron_hamburguesas_al_dia_siguiente_n'] = df.replace({'llovieron_hamburguesas_al_dia_siguiente': {'si': 100, 'no': 0}})['llovieron_hamburguesas_al_dia_siguiente']
+df['llovieron_hamburguesas_al_dia_siguiente_n'] = df.replace(
+    {'llovieron_hamburguesas_al_dia_siguiente': {'si': 100, 'no': 0}}
+)['llovieron_hamburguesas_al_dia_siguiente']
 
 burger_mean = df['llovieron_hamburguesas_al_dia_siguiente_n'].mean()
 burger_mean
 
 # ### Analisis de features numericas
 
-num_labels = ["horas_de_sol","humedad_tarde","mm_lluvia_dia","nubosidad_tarde"]
+num_labels = [
+    "horas_de_sol",
+    "humedad_tarde",
+    "mm_lluvia_dia",
+    "nubosidad_tarde",
+    "direccion_viento_temprano_num",
+    "direccion_viento_tarde_num",
+]
 
 
 def cmpNumeric(label):
@@ -197,25 +208,37 @@ for label in num_labels:
 # +
 df_num = pd.DataFrame(
     {
-        'filtro':[
+        'filtro': [
             "promedio normal",
             "horas_de_sol < 7",
             "humedad_tarde > 60",
             "mm_lluvia_dia is Nan",
             "nubosidad_tarde > 7",
+            "direccion_viento_temprano < 45",
         ],
-        '%_llovieron_hamburguesas':[
+        '%_llovieron_hamburguesas': [
             burger_mean,
-            df[ (df['horas_de_sol']<7) ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
-            df[ (df['humedad_tarde']>60) ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
-            df[ (df['mm_lluvia_dia'].isna()) ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
-            df[ (df['nubosidad_tarde'] > 7) ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
-        ]
+            df[(df['horas_de_sol'] < 7)][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
+            df[(df['humedad_tarde'] > 60)][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
+            df[(df['mm_lluvia_dia'].isna())][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
+            df[(df['nubosidad_tarde'] > 7)][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
+            df[(df['direccion_viento_temprano_num'] < 45)][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
+        ],
     }
 ).sort_values(by="%_llovieron_hamburguesas", ascending=False)
 
 plt.figure(dpi=150, figsize=(3, 2))
-sns.barplot( data=df_num, y='filtro', x='%_llovieron_hamburguesas')
+sns.barplot(data=df_num, y='filtro', x='%_llovieron_hamburguesas')
 plt.axvline(burger_mean, 0, 1, color="#000")
 plt.show()
 df_num
@@ -223,17 +246,22 @@ df_num
 
 # ### Analisis en features categoricas
 
-labels_cat = ['llovieron_hamburguesas_hoy','barrio']
+labels_cat = ['llovieron_hamburguesas_hoy', 'barrio']
 
 
 def cmpNonNumeric2(label):
-    
-    height = max( 3, len(df[label].unique()) *0.2 )
-    plt.figure(dpi=150, figsize=(5, height) )
-    
-    plt.title("% de lluvia de haburguesas segun "+label)
 
-    df2 = df[ [label,"llovieron_hamburguesas_al_dia_siguiente_n"] ].groupby(label).mean().sort_values("llovieron_hamburguesas_al_dia_siguiente_n")
+    height = max(3, len(df[label].unique()) * 0.2)
+    plt.figure(dpi=150, figsize=(5, height))
+
+    plt.title("% de lluvia de haburguesas segun " + label)
+
+    df2 = (
+        df[[label, "llovieron_hamburguesas_al_dia_siguiente_n"]]
+        .groupby(label)
+        .mean()
+        .sort_values("llovieron_hamburguesas_al_dia_siguiente_n")
+    )
     sns.barplot(y=df2.index, x="llovieron_hamburguesas_al_dia_siguiente_n", data=df2)
     plt.axvline(burger_mean, 0, 1, color="#000")
 
@@ -250,22 +278,35 @@ for label in labels_cat:
 # +
 df_cat = pd.DataFrame(
     {
-        'filtro':[
-            "promedio normal",
-            "llovieron_hamburguesas_hoy",
-            "barrio in top 9",
-        ],
-        '%_llovieron_hamburguesas':[
+        'filtro': ["promedio normal", "llovieron_hamburguesas_hoy", "barrio in top 9",],
+        '%_llovieron_hamburguesas': [
             burger_mean,
-            df[ (df["llovieron_hamburguesas_hoy"] == "si") ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
-            df[ (df["barrio"].isin(['Parque Patricios','Villa Pueyrredón','Saavedra','Chacarita','Recoleta','Vélez Sársfield','Barracas','Villa del Parque','Villa Devoto',])) ]
-                ['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
-        ]
+            df[(df["llovieron_hamburguesas_hoy"] == "si")][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
+            df[
+                (
+                    df["barrio"].isin(
+                        [
+                            'Parque Patricios',
+                            'Villa Pueyrredón',
+                            'Saavedra',
+                            'Chacarita',
+                            'Recoleta',
+                            'Vélez Sársfield',
+                            'Barracas',
+                            'Villa del Parque',
+                            'Villa Devoto',
+                        ]
+                    )
+                )
+            ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
+        ],
     }
 ).sort_values(by="%_llovieron_hamburguesas", ascending=False)
 
 plt.figure(dpi=150, figsize=(3, 2))
-sns.barplot( data=df_cat, y='filtro', x='%_llovieron_hamburguesas')
+sns.barplot(data=df_cat, y='filtro', x='%_llovieron_hamburguesas')
 plt.axvline(burger_mean, 0, 1, color="#000")
 plt.show()
 df_cat
@@ -281,14 +322,31 @@ df_cat
 #
 # Es interesante notar que es un modelo similar a una red neuronal sin capas ( solo de entrada y salida ).
 
+
 def baseline(df, threshold=1):
     c = (
-          0.49 * (df["nubosidad_tarde"] > 7)
+        0.49 * (df["nubosidad_tarde"] > 7)
         + 0.49 * (df["mm_lluvia_dia"].isna())
         + 0.46 * (df["llovieron_hamburguesas_hoy"] == "si")
         + 0.45 * (df["humedad_tarde"] > 60)
         + 0.44 * (df["horas_de_sol"] < 7)
-        + 0.31 * (df["barrio"].isin(['Parque Patricios','Villa Pueyrredón','Saavedra','Chacarita','Recoleta','Vélez Sársfield','Barracas','Villa del Parque','Villa Devoto',]))
+        + 0.31
+        * (
+            df["barrio"].isin(
+                [
+                    'Parque Patricios',
+                    'Villa Pueyrredón',
+                    'Saavedra',
+                    'Chacarita',
+                    'Recoleta',
+                    'Vélez Sársfield',
+                    'Barracas',
+                    'Villa del Parque',
+                    'Villa Devoto',
+                ]
+            )
+        )
+        + 0.10 * ((df['direccion_viento_temprano_num'] < 45))
     )
 
     return c > threshold
@@ -308,50 +366,78 @@ _target = df["llovieron_hamburguesas_al_dia_siguiente"] == "si"
 
 # Podemos mejorar el rendimiento ajustando los parametros ?
 
-def baseline2(df, threshold=1, vals=[0.49,0.49,0.46,0.45,0.44,0.31]):
+
+def baseline2(df, threshold=1, vals=[0.49, 0.49, 0.46, 0.45, 0.44, 0.31]):
     c = (
-          vals[0] * (df["nubosidad_tarde"] > 7)
+        vals[0] * (df["nubosidad_tarde"] > 7)
         + vals[1] * (df["mm_lluvia_dia"].isna())
         + vals[2] * (df["llovieron_hamburguesas_hoy"] == "si")
         + vals[3] * (df["humedad_tarde"] > 60)
         + vals[4] * (df["horas_de_sol"] < 7)
-        + vals[5] * (df["barrio"].isin(['Parque Patricios','Villa Pueyrredón','Saavedra','Chacarita','Recoleta','Vélez Sársfield','Barracas','Villa del Parque','Villa Devoto',]))
+        + vals[5]
+        * (
+            df["barrio"].isin(
+                [
+                    'Parque Patricios',
+                    'Villa Pueyrredón',
+                    'Saavedra',
+                    'Chacarita',
+                    'Recoleta',
+                    'Vélez Sársfield',
+                    'Barracas',
+                    'Villa del Parque',
+                    'Villa Devoto',
+                ]
+            )
+        )
     )
 
     return c > threshold
 
 
 import ipywidgets as widgets
+
 plot_stack = []
 
 # +
-sld = [widgets.FloatSlider(min=0,max=1,step=0.01,value=0.49),widgets.FloatSlider(min=0,max=1,step=0.01,value=0.49),widgets.FloatSlider(min=0,max=1,step=0.01,value=0.46),widgets.FloatSlider(min=0,max=1,step=0.01,value=0.45),widgets.FloatSlider(min=0,max=1,step=0.01,value=0.44),widgets.FloatSlider(min=0,max=1,step=0.01,value=0.31),]
+sld = [
+    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.49),
+    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.49),
+    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.46),
+    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.45),
+    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.44),
+    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.31),
+]
 
-def replot(d0,d1,d2,d3,d4,d5,min=-30,max=50):
+
+def replot(d0, d1, d2, d3, d4, d5, min=-30, max=50):
     idx = []
     res = []
-    for i in range(min,max):
+    for i in range(min, max):
         idx.append(i)
-        res.append((baseline2(df,1+i/100,[d0,d1,d2,d3,d4,d5]) == _target).mean())
-    df_tst = pd.DataFrame(
-        {
-            'idx':idx,
-            'res':res
-        }
-    )
-    print( df_tst.res.max() )
+        res.append(
+            (baseline2(df, 1 + i / 100, [d0, d1, d2, d3, d4, d5]) == _target).mean()
+        )
+    df_tst = pd.DataFrame({'idx': idx, 'res': res})
+    print(df_tst.res.max())
     plot_stack.append(df_tst)
-    if len(plot_stack)>5 :  plot_stack.pop(0)
-    _i=0
-    _len=len(plot_stack)
+    if len(plot_stack) > 5:
+        plot_stack.pop(0)
+    _i = 0
+    _len = len(plot_stack)
     for df_tst in plot_stack:
-        _i+=1
-        label=str(_i)+": "+f'{df_tst.res.max():.2f}'
-        sns.lineplot(data=df_tst, x='idx', y='res',alpha=_i/_len,label=label)
+        _i += 1
+        label = str(_i) + ": " + f'{df_tst.res.max():.2f}'
+        sns.lineplot(data=df_tst, x='idx', y='res', alpha=_i / _len, label=label)
 
-widgets.interactive(replot, d0=sld[0], d1=sld[1], d2=sld[2], d3=sld[3], d4=sld[4], d5=sld[5])
 
-display(sld[0],sld[1],sld[2],sld[3],sld[4],sld[5],)
+widgets.interactive(
+    replot, d0=sld[0], d1=sld[1], d2=sld[2], d3=sld[3], d4=sld[4], d5=sld[5]
+)
+
+display(
+    sld[0], sld[1], sld[2], sld[3], sld[4], sld[5],
+)
 # -
 
 # No de manera significativa, por lo menos no a ojo.
