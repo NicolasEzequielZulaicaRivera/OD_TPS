@@ -290,6 +290,45 @@ plt.show()
 df_num
 # -
 
+# Apreciamos que aumenta mucho la posibilidad de que lluevan hamburguesas
+
+# +
+df_num = pd.DataFrame(
+    {
+        'filtro': [
+            "promedio normal",
+            "horas_de_sol < 5",
+            "humedad_tarde > 70",
+            "nubosidad_tarde > 7.5",
+            "mm_lluvia_dia > 10",
+        ],
+        '%_llovieron_hamburguesas': [
+            burger_mean,
+            df[(df['horas_de_sol'] < 5)][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
+            df[(df['humedad_tarde'] > 70)][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
+            df[(df['nubosidad_tarde'] > 7.5)][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
+            df[(df['mm_lluvia_dia'] > 10)][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
+        ],
+    }
+).sort_values(by="%_llovieron_hamburguesas", ascending=False)
+
+plt.figure(dpi=150, figsize=(3, 2))
+sns.barplot(data=df_num, y='filtro', x='%_llovieron_hamburguesas')
+plt.axvline(burger_mean, 0, 1, color="#000")
+plt.show()
+df_num
+# -
+
+# Vemos que tocando los coeficientes podemos aumentar aun mas la posibilidad
+
 # ### Analisis en features categoricas
 
 labels_cat = ['llovieron_hamburguesas_hoy', 'barrio']
@@ -314,8 +353,13 @@ def cmpNonNumeric2(label):
     plt.show()
 
 
-for label in labels_cat:
-    cmpNonNumeric2(label)
+cmpNonNumeric2('llovieron_hamburguesas_hoy')
+
+# Vemos una clara dependencia entre si llovieron hamburguesas un dia y si lloveran al siguiente
+
+cmpNonNumeric2('barrio')
+
+# Vemos que en algunos barrios llueve un poco mas que el pormedio y en otros considerablemente menos 
 
 # #### Filtros en variables numericas
 
@@ -324,7 +368,7 @@ for label in labels_cat:
 # +
 df_cat = pd.DataFrame(
     {
-        'filtro': ["promedio normal", "llovieron_hamburguesas_hoy", "barrio in top 9",],
+        'filtro': ["promedio normal", "llovieron_hamburguesas_hoy", "barrio in top 6","barrio in top 3", "barrio in low 6","barrio in low 3",],
         '%_llovieron_hamburguesas': [
             burger_mean,
             df[(df["llovieron_hamburguesas_hoy"] == "si")][
@@ -340,9 +384,45 @@ df_cat = pd.DataFrame(
                             'Chacarita',
                             'Recoleta',
                             'Vélez Sársfield',
-                            'Barracas',
-                            'Villa del Parque',
-                            'Villa Devoto',
+                        ]
+                    )
+                )
+            ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
+            df[
+                (
+                    df["barrio"].isin(
+                        [
+                            'Parque Patricios',
+                            'Villa Pueyrredón',
+                            'Saavedra',
+                        ]
+                    )
+                )
+            ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
+            
+            df[
+                (
+                    df["barrio"].isin(
+                        [
+                            'Villa Crespo',
+                            'Palermo cheto',
+                            'Villa Crespo',
+                            'Villa Santa Rita',
+                            'Parque Chacabuco',
+                            'Balvanera',
+                            
+                        ]
+                    )
+                )
+            ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
+            
+            df[
+                (
+                    df["barrio"].isin(
+                        [
+                            'Villa Crespo',
+                            'Palermo cheto',
+                            'Villa Crespo',
                         ]
                     )
                 )
@@ -359,6 +439,8 @@ df_cat
 
 
 # -
+
+# Notamos que que lluevan hamburguesas aumenta la posibilidad considerablemente, al mismo tiempo ciertos barrios la disminuyen considerablemente.
 
 # ## Conclusiones
 
@@ -379,7 +461,7 @@ df_cat
 def baseline(df, threshold=1):
     c = (
         0.49 * (df["nubosidad_tarde"] > 7)
-        + 0.49 * (df["mm_lluvia_dia"].isna())
+        + 0.49 * (df["mm_lluvia_dia"] > 5)
         + 0.46 * (df["llovieron_hamburguesas_hoy"] == "si")
         + 0.45 * (df["humedad_tarde"] > 60)
         + 0.44 * (df["horas_de_sol"] < 7)
@@ -423,7 +505,7 @@ _target = df["llovieron_hamburguesas_al_dia_siguiente"] == "si"
 def baseline2(df, threshold=1, vals=[0.49, 0.49, 0.46, 0.45, 0.44, 0.31]):
     c = (
         vals[0] * (df["nubosidad_tarde"] > 7)
-        + vals[1] * (df["mm_lluvia_dia"].isna())
+        + vals[1] * (df["mm_lluvia_dia"] > 5)
         + vals[2] * (df["llovieron_hamburguesas_hoy"] == "si")
         + vals[3] * (df["humedad_tarde"] > 60)
         + vals[4] * (df["horas_de_sol"] < 7)
