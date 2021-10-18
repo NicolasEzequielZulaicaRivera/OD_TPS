@@ -3,6 +3,7 @@
 
 import pandas as pd
 import numpy as np
+from IPython.display import display, Markdown, Latex
 from matplotlib import pyplot as plt
 
 import seaborn as sns
@@ -142,9 +143,6 @@ def cmpNonNumeric2(label):
     plt.show()
 
 
-for label in labels:
-    cmpNonNumeric2(label)
-
 # ##### Observaciones 2
 
 # Todas parecieran ponderar, entre una opcion y otra puede haber el doble de % de casos de lluvia de 🍔
@@ -180,3 +178,93 @@ plt.show()
 # ##### Observaciones
 
 # No tiene mucha relevancia
+
+# ### Analisis entre multiples features
+
+# #### Numericas
+
+# +
+labels = df.select_dtypes(include=np.number).columns.tolist()
+labels.remove('id')
+labels.remove('llovieron_hamburguesas_al_dia_siguiente')
+
+for label1 in labels:
+    flag = False
+    for label2 in labels:
+        if label1 == label2 :
+            flag = True
+            continue
+        if flag == False:
+            continue
+        print(label1)
+        print(label2)
+        print()
+        dft = df[[label1,label2,'llovieron_hamburguesas_al_dia_siguiente']].fillna(0)
+        dft['tv']=dft[label1]*dft[label2]
+        plt.figure()
+        sns.histplot( data=dft, x='tv', bins=10, hue="llovieron_hamburguesas_al_dia_siguiente" )
+        plt.show()
+# -
+
+# ##### Observaciones
+
+# nada importante
+
+# #### Categoricas
+
+# +
+labels = df.select_dtypes(exclude=np.number).columns.tolist()
+labels.remove('dia')
+labels.remove('y')
+labels.remove('m')
+labels.remove('d')
+
+for label1 in labels:
+    flag = False
+    for label2 in labels:
+        if label1 == label2 :
+            flag = True
+            continue
+        if flag == False:
+            continue
+        print(label1)
+        print(label2)
+        print()
+        
+        plt.figure(dpi=150)
+        sns.heatmap(
+            df.groupby(
+                [label1,label2]
+            )['llovieron_hamburguesas_al_dia_siguiente']
+            .mean().unstack(),
+            cmap="RdBu",
+            vmin=0,vmax=100, center=burger_mean,
+            annot=True,annot_kws={'fontsize':5}, fmt=".0f"
+        )
+        plt.show()
+# -
+
+# #### Combinadas
+
+# +
+# labels_c = df.select_dtypes(exclude=np.number).columns.tolist()
+# if 'dia' in labels_c : labels_c.remove('dia')
+# if 'y' in labels_c : labels_c.remove('y')
+# if 'm' in labels_c : labels_c.remove('m')
+# if 'd' in labels_c : labels_c.remove('d')
+
+# labels_n = df.select_dtypes(include=np.number).columns.tolist()
+# labels_n.remove('id')
+# labels_n.remove('llovieron_hamburguesas_al_dia_siguiente')
+
+
+# for c in labels_c:
+#     display(Markdown(f"<hr><h3>{c}</h3>"))
+#     for n in labels_n:
+#         display(Markdown(f"<h4>{n}</h4>"))
+#         keys = df[c].unique()
+
+#         for key in keys:
+#             plt.figure(dpi=150)
+#             sns.histplot( data=df[ df[c]==key ], x=n, bins=10, hue="llovieron_hamburguesas_al_dia_siguiente" )
+#             plt.show()

@@ -177,10 +177,10 @@ burger_mean
 num_labels = [
     "horas_de_sol",
     "humedad_tarde",
-    "mm_lluvia_dia",
     "nubosidad_tarde",
     "direccion_viento_temprano_num",
     "direccion_viento_tarde_num",
+    "mm_lluvia_dia",
 ]
 
 
@@ -198,8 +198,18 @@ def cmpNumeric(label):
     plt.show()
 
 
-for label in num_labels:
-    cmpNumeric(label)
+cmpNumeric(label)
+cmpNumeric(label)
+cmpNumeric(label)
+cmpNumeric(label)
+cmpNumeric(label)
+cmpNumeric(label)
+cmpNumeric(label)
+cmpNumeric(label)
+cmpNumeric(label)
+cmpNumeric(label)
+cmpNumeric(label)
+
 
 # #### Filtros en variables numericas
 
@@ -397,6 +407,11 @@ def baseline2(df, threshold=1, vals=[0.49, 0.49, 0.46, 0.45, 0.44, 0.31]):
                 ]
             )
         )
+        - .2 * (df["llovieron_hamburguesas_hoy"] != "si")
+        - .2 * (df["barrio"].isin(["Estesureste","Este","Estenoreste","Noreste","Sureste"]))
+        - .2 * (df["nubosidad_tarde"] < 4)
+        - .2 * (df["humedad_tarde"] < 30)
+        - .2 * (df["mm_lluvia_dia"].isna()==False)
     )
 
     return c > threshold

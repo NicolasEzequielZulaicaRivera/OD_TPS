@@ -224,4 +224,44 @@ def baseline(df):
 _baseline = baseline(df)
 _target = df["llovieron_hamburguesas_al_dia_siguiente"] == "si"
 
-(_baseline == _target).mean()
+_res=(_baseline == _target)
+_notres=(_baseline != _target)
+
+
+# +
+def baseline2(df, threshold=1, vals=[0.49, 0.49, 0.46, 0.45, 0.44, 0.31]):
+    c = (
+        vals[0] * (df["nubosidad_tarde"] > 7)
+        + vals[1] * (df["mm_lluvia_dia"].isna())
+        + vals[2] * (df["llovieron_hamburguesas_hoy"] == "si")
+        + vals[3] * (df["humedad_tarde"] > 60)
+        + vals[4] * (df["horas_de_sol"] < 7)
+        + vals[5] * (df["barrio"].isin(['Parque Patricios','Villa Pueyrredón','Saavedra','Chacarita','Recoleta','Vélez Sársfield','Barracas','Villa del Parque','Villa Devoto',]))
+        
+        - .2 * (df["llovieron_hamburguesas_hoy"] != "si")
+        - .2 * (df["barrio"].isin(["Estesureste","Este","Estenoreste","Noreste","Sureste"]))
+        - .2 * (df["nubosidad_tarde"] < 4)
+        - .2 * (df["humedad_tarde"] < 30)
+        - .2 * (df["mm_lluvia_dia"].isna()==False)
+    )
+
+    return c > threshold
+
+_baseline = baseline2(df)
+_target = df["llovieron_hamburguesas_al_dia_siguiente"] == "si"
+
+_res=(_baseline == _target)
+_notres=(_baseline != _target)
+
+_res.mean()
+# -
+
+
+
+# +
+vc = df["llovieron_hamburguesas_al_dia_siguiente"].value_counts()
+t = df[ _res ]["llovieron_hamburguesas_al_dia_siguiente"].value_counts()
+f = df[ _notres ]["llovieron_hamburguesas_al_dia_siguiente"].value_counts()
+
+print("TP:"+str( t['si'] )+"\tFP:"+str( f['si'] ))
+print("FN:"+str( f['no'] )+"\tTN:"+str( t['no'] ))
