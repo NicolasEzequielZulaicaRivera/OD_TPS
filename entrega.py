@@ -172,17 +172,8 @@ df['llovieron_hamburguesas_al_dia_siguiente_n'] = df.replace(
 burger_mean = df['llovieron_hamburguesas_al_dia_siguiente_n'].mean()
 burger_mean
 
+
 # ### Analisis de features numericas
-
-num_labels = [
-    "horas_de_sol",
-    "humedad_tarde",
-    "nubosidad_tarde",
-    "direccion_viento_temprano_num",
-    "direccion_viento_tarde_num",
-    "mm_lluvia_dia",
-]
-
 
 def cmpNumeric(label):
     plt.figure(dpi=100)
@@ -198,18 +189,67 @@ def cmpNumeric(label):
     plt.show()
 
 
-cmpNumeric(label)
-cmpNumeric(label)
-cmpNumeric(label)
-cmpNumeric(label)
-cmpNumeric(label)
-cmpNumeric(label)
-cmpNumeric(label)
-cmpNumeric(label)
-cmpNumeric(label)
-cmpNumeric(label)
-cmpNumeric(label)
+def detNumeric(label,c=0,m=1,s=10,op=">"):
+    x = []
+    y = []
+    for i in range(0,s):
+        x.append( i*m+c )
+        if op==">" :
+            y.append( 
+                df[(df[label] > i*m+c)][
+                    'llovieron_hamburguesas_al_dia_siguiente_n'
+                ].mean()
+            )
+        else:
+            y.append( 
+                df[(df[label] < i*m+c)][
+                    'llovieron_hamburguesas_al_dia_siguiente_n'
+                ].mean()
+            )
+    plt.plot(x,y)
 
+
+# ---
+
+cmpNumeric("horas_de_sol")
+
+
+# Notamos que la tendencia en horas de sol es menor cuando lloveran hamburguesas al dia siguiente.
+# Vemos los si se concentran por debajo de 7 y los no por arriba.
+
+detNumeric("horas_de_sol",7,-.5,20,"<")
+
+# Notamos que dismunuye la posibilidad mientras mas horas de sol haya
+
+# ---
+
+cmpNumeric("humedad_tarde")
+
+# Notamos que la tendencia en humedad tarde es mayor cuando lloveran hamburguesas al dia siguiente.
+# Vemos los no se concentran por debajo de 60 y los si por arriba.
+
+detNumeric("humedad_tarde",60,5,20)
+
+# Notamos que aumenta la posibilidad mientras mas humedad haya
+
+# ---
+
+cmpNumeric("nubosidad_tarde")
+
+# Notamos que la tendencia en nubosidad tarde es mayor cuando lloveran hamburguesas al dia siguiente.
+# Vemos los no se concentran por debajo de 7 y los si por arriba.
+
+# ---
+
+cmpNumeric("mm_lluvia_dia")
+
+# Notamos que no suele llover previo a una lluvia de hamburguesas
+
+detNumeric("mm_lluvia_dia",0,5,15)
+
+# Notamos que aumenta la posibilidad mientras mas mm lluvia haya
+
+# ---
 
 # #### Filtros en variables numericas
 
@@ -222,9 +262,8 @@ df_num = pd.DataFrame(
             "promedio normal",
             "horas_de_sol < 7",
             "humedad_tarde > 60",
-            "mm_lluvia_dia is Nan",
             "nubosidad_tarde > 7",
-            "direccion_viento_temprano < 45",
+            "mm_lluvia_dia > 5",
         ],
         '%_llovieron_hamburguesas': [
             burger_mean,
@@ -234,13 +273,10 @@ df_num = pd.DataFrame(
             df[(df['humedad_tarde'] > 60)][
                 'llovieron_hamburguesas_al_dia_siguiente_n'
             ].mean(),
-            df[(df['mm_lluvia_dia'].isna())][
-                'llovieron_hamburguesas_al_dia_siguiente_n'
-            ].mean(),
             df[(df['nubosidad_tarde'] > 7)][
                 'llovieron_hamburguesas_al_dia_siguiente_n'
             ].mean(),
-            df[(df['direccion_viento_temprano_num'] < 45)][
+            df[(df['mm_lluvia_dia'] > 5)][
                 'llovieron_hamburguesas_al_dia_siguiente_n'
             ].mean(),
         ],
