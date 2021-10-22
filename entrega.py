@@ -175,6 +175,7 @@ burger_mean
 
 # ### Analisis de features numericas
 
+
 def cmpNumeric(label):
     plt.figure(dpi=100)
     plt.title(label)
@@ -189,24 +190,24 @@ def cmpNumeric(label):
     plt.show()
 
 
-def detNumeric(label,c=0,m=1,s=10,op=">"):
+def detNumeric(label, c=0, m=1, s=10, op=">"):
     x = []
     y = []
-    for i in range(0,s):
-        x.append( i*m+c )
-        if op==">" :
-            y.append( 
-                df[(df[label] > i*m+c)][
+    for i in range(0, s):
+        x.append(i * m + c)
+        if op == ">":
+            y.append(
+                df[(df[label] > i * m + c)][
                     'llovieron_hamburguesas_al_dia_siguiente_n'
                 ].mean()
             )
         else:
-            y.append( 
-                df[(df[label] < i*m+c)][
+            y.append(
+                df[(df[label] < i * m + c)][
                     'llovieron_hamburguesas_al_dia_siguiente_n'
                 ].mean()
             )
-    plt.plot(x,y)
+    plt.plot(x, y)
 
 
 # ---
@@ -217,7 +218,7 @@ cmpNumeric("horas_de_sol")
 # Notamos que la tendencia en horas de sol es menor cuando lloveran hamburguesas al dia siguiente.
 # Vemos los si se concentran por debajo de 7 y los no por arriba.
 
-detNumeric("horas_de_sol",7,-.5,20,"<")
+detNumeric("horas_de_sol", 7, -0.5, 20, "<")
 
 # Notamos que dismunuye la posibilidad mientras mas horas de sol haya
 
@@ -228,7 +229,7 @@ cmpNumeric("humedad_tarde")
 # Notamos que la tendencia en humedad tarde es mayor cuando lloveran hamburguesas al dia siguiente.
 # Vemos los no se concentran por debajo de 60 y los si por arriba.
 
-detNumeric("humedad_tarde",60,5,20)
+detNumeric("humedad_tarde", 60, 5, 20)
 
 # Notamos que aumenta la posibilidad mientras mas humedad haya
 
@@ -245,7 +246,7 @@ cmpNumeric("mm_lluvia_dia")
 
 # Notamos que no suele llover previo a una lluvia de hamburguesas
 
-detNumeric("mm_lluvia_dia",0,5,15)
+detNumeric("mm_lluvia_dia", 0, 5, 15)
 
 # Notamos que aumenta la posibilidad mientras mas mm lluvia haya
 
@@ -359,7 +360,7 @@ cmpNonNumeric2('llovieron_hamburguesas_hoy')
 
 cmpNonNumeric2('barrio')
 
-# Vemos que en algunos barrios llueve un poco mas que el pormedio y en otros considerablemente menos 
+# Vemos que en algunos barrios llueve un poco mas que el pormedio y en otros considerablemente menos
 
 # #### Filtros en variables numericas
 
@@ -368,7 +369,14 @@ cmpNonNumeric2('barrio')
 # +
 df_cat = pd.DataFrame(
     {
-        'filtro': ["promedio normal", "llovieron_hamburguesas_hoy", "barrio in top 6","barrio in top 3", "barrio in low 6","barrio in low 3",],
+        'filtro': [
+            "promedio normal",
+            "llovieron_hamburguesas_hoy",
+            "barrio in top 6",
+            "barrio in top 3",
+            "barrio in low 6",
+            "barrio in low 3",
+        ],
         '%_llovieron_hamburguesas': [
             burger_mean,
             df[(df["llovieron_hamburguesas_hoy"] == "si")][
@@ -391,15 +399,10 @@ df_cat = pd.DataFrame(
             df[
                 (
                     df["barrio"].isin(
-                        [
-                            'Parque Patricios',
-                            'Villa Pueyrredón',
-                            'Saavedra',
-                        ]
+                        ['Parque Patricios', 'Villa Pueyrredón', 'Saavedra',]
                     )
                 )
             ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
-            
             df[
                 (
                     df["barrio"].isin(
@@ -410,23 +413,13 @@ df_cat = pd.DataFrame(
                             'Villa Santa Rita',
                             'Parque Chacabuco',
                             'Balvanera',
-                            
                         ]
                     )
                 )
             ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
-            
-            df[
-                (
-                    df["barrio"].isin(
-                        [
-                            'Villa Crespo',
-                            'Palermo cheto',
-                            'Villa Crespo',
-                        ]
-                    )
-                )
-            ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean(),
+            df[(df["barrio"].isin(['Villa Crespo', 'Palermo cheto', 'Villa Crespo',]))][
+                'llovieron_hamburguesas_al_dia_siguiente_n'
+            ].mean(),
         ],
     }
 ).sort_values(by="%_llovieron_hamburguesas", ascending=False)
@@ -456,6 +449,10 @@ df_cat
 # Planteamos una funcion baseline como una combinacion lineal basada en los filtros del analisis.
 #
 # Es interesante notar que es un modelo similar a una red neuronal sin capas ( solo de entrada y salida ).
+
+
+# +
+# TODO: Esto va a ser borrado
 
 
 def baseline(df, threshold=1):
@@ -497,91 +494,29 @@ _target = df["llovieron_hamburguesas_al_dia_siguiente"] == "si"
 
 # -
 
-# ### Mejorar el rendimiento
 
-# Podemos mejorar el rendimiento ajustando los parametros ?
+def baseline_con_ifs(df):
+    res = []
+    for index, row in df.iterrows():
+        va_a_llover_maniana = 0
+        if (
+            (row["nubosidad_tarde"] > 7)
+            or (row["mm_lluvia_dia"] > 5)
+            or (row["llovieron_hamburguesas_hoy"] == "si")
+        ):
+            va_a_llover_maniana = 1
+        res.append(va_a_llover_maniana)
+    return res
 
-
-def baseline2(df, threshold=1, vals=[0.49, 0.49, 0.46, 0.45, 0.44, 0.31]):
-    c = (
-        vals[0] * (df["nubosidad_tarde"] > 7)
-        + vals[1] * (df["mm_lluvia_dia"] > 5)
-        + vals[2] * (df["llovieron_hamburguesas_hoy"] == "si")
-        + vals[3] * (df["humedad_tarde"] > 60)
-        + vals[4] * (df["horas_de_sol"] < 7)
-        + vals[5]
-        * (
-            df["barrio"].isin(
-                [
-                    'Parque Patricios',
-                    'Villa Pueyrredón',
-                    'Saavedra',
-                    'Chacarita',
-                    'Recoleta',
-                    'Vélez Sársfield',
-                    'Barracas',
-                    'Villa del Parque',
-                    'Villa Devoto',
-                ]
-            )
-        )
-        - .2 * (df["llovieron_hamburguesas_hoy"] != "si")
-        - .2 * (df["barrio"].isin(["Estesureste","Este","Estenoreste","Noreste","Sureste"]))
-        - .2 * (df["nubosidad_tarde"] < 4)
-        - .2 * (df["humedad_tarde"] < 30)
-        - .2 * (df["mm_lluvia_dia"].isna()==False)
-    )
-
-    return c > threshold
-
-
-import ipywidgets as widgets
-
-plot_stack = []
 
 # +
-sld = [
-    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.49),
-    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.49),
-    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.46),
-    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.45),
-    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.44),
-    widgets.FloatSlider(min=0, max=1, step=0.01, value=0.31),
-]
 
+_baseline = baseline_con_ifs(df)
+_target = df["llovieron_hamburguesas_al_dia_siguiente"] == "si"
 
-def replot(d0, d1, d2, d3, d4, d5, min=-30, max=50):
-    idx = []
-    res = []
-    for i in range(min, max):
-        idx.append(i)
-        res.append(
-            (baseline2(df, 1 + i / 100, [d0, d1, d2, d3, d4, d5]) == _target).mean()
-        )
-    df_tst = pd.DataFrame({'idx': idx, 'res': res})
-    print(df_tst.res.max())
-    plot_stack.append(df_tst)
-    if len(plot_stack) > 5:
-        plot_stack.pop(0)
-    _i = 0
-    _len = len(plot_stack)
-    for df_tst in plot_stack:
-        _i += 1
-        label = str(_i) + ": " + f'{df_tst.res.max():.2f}'
-        sns.lineplot(data=df_tst, x='idx', y='res', alpha=_i / _len, label=label)
-
-
-widgets.interactive(
-    replot, d0=sld[0], d1=sld[1], d2=sld[2], d3=sld[3], d4=sld[4], d5=sld[5]
-)
-
-display(
-    sld[0], sld[1], sld[2], sld[3], sld[4], sld[5],
-)
+(_baseline == _target).mean()
 # -
 
-# No de manera significativa, por lo menos no a ojo.
-#
 # Para mejorar el rendimiento habria que mejorar el modelo.
 #
 # El modelo podria mejorar de las siguientes formas:
