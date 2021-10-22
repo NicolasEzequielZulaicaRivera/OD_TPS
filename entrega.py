@@ -58,6 +58,7 @@ df['presion_atmosferica_tarde'] = df['presion_atmosferica_tarde'].astype('float6
 # Verificamos que el dataset tenía una gran cantidad de missings
 
 missings = df.isna().sum()
+missings_totales_iniciales = df.isna().sum(axis=1).sum()
 missings_porcentaje = missings * 100 / len(df)
 missings_porcentaje.to_frame()
 df_missings = pd.DataFrame(
@@ -69,17 +70,87 @@ df_missings
 
 # Se puede observar como hay varias columnas en las que las mediciones fueron hechas temprano, y otras en la tarde.
 #
-# Si calculamos la relación entre las columnas, podemos reemplazar los datos faltantes con sus horarios opuestos
+# De estos datos, hay algunas ocasiones en las que había el dato temprano y en la tarde había un missing, y viceversa.
 
-columnas = [
+# +
+plt.figure(dpi=150)
+labels = ['Falta temprano', 'Falta tarde']
+x = np.arange(len(labels))
+width = 0.35
+fig, ax = plt.subplots()
+
+i = -2
+for columna in [
     'humedad',
     'nubosidad',
     'presion_atmosferica',
     'temperatura',
     'velocidad_viendo',
+]:
+    datos = {
+        'Falta temprano': len(
+            df[(df[columna + '_temprano'].isna()) & (df[columna + '_tarde'].notna())]
+        ),
+        'Falta tarde': len(
+            df[(df[columna + '_temprano'].notna()) & (df[columna + '_tarde'].isna())]
+        ),
+    }
+    ax.bar(x + i * width / 5, datos.values(), width / 5, label=columna)
+    i += 1
+
+ax.set_ylabel('Cantidad de missings')
+ax.set_title('Missings en los que falta uno de los 2 datos')
+ax.set_xticks(x)
+ax.set_xticklabels(labels)
+ax.legend()
+fig.tight_layout()
+plt.show()
+# -
+
+# Se puede observar cómo, a excepción de la `presion_atmosferica` en el que tiene muy pocos missings, la cantidad de missings en la tarde suele ser más del doble que de temprano
+
+# #### ¿Cómo podemos usar los datos de los horarios para rellenar los missings faltantes?
+
+# Analizemos la relación que suelen tener los datos entre sí
+
+columnas_con_horarios_opuestos = [
+    'humedad',
+    'nubosidad',
+    'temperatura',
+    'velocidad_viendo',
 ]
+
+# +
+fig, axes = plt.subplots(nrows=2, ncols=2, sharey=True, dpi=100, figsize=(15, 15))
+
+i = j = 0
+for columna in columnas_con_horarios_opuestos:
+    col_tempr = columna + '_temprano'
+    col_tarde = columna + '_tarde'
+    axes[j, i].scatter(
+        x=df[col_tempr], y=df[col_tarde], s=2,
+    )
+    axes[j, i].set_title(columna)
+    axes[j, i].set_xlabel(col_tempr)
+    axes[j, i].set_ylabel(col_tarde)
+    i += 1
+    if i == 2:
+        j += 1
+        i = 0
+
+plt.show()
+# -
+
+# Podemos ver cómo los datos de la `nubosidad` sólo están cargados con números enteros en la mañana, y con decimales en la tarde. Por lo que no nos servirá mucho su distribución.
+
+columnas_con_horarios_opuestos.remove('nubosidad')
+
+# Sin embargo en los otros, podemos ver una clara tendencia de cada uno de sus valores
+
+# Si calculamos el promedio que llevan la diferencia entre las columnas
+
 relacion_horarios = {}
-for columna in columnas:
+for columna in columnas_con_horarios_opuestos:
     col_tempr = columna + '_temprano'
     col_tarde = columna + '_tarde'
     relacion_horarios[col_tempr] = (
@@ -90,7 +161,7 @@ for columna in columnas:
     ).mean()
 
 
-# Entonces, teniendo la relación que tienen entre sí en promedio, podemos rellenar los casos que se tenga un dato de los dos
+# Entonces con esto podemos rellenar los casos que se tenga un dato de los dos
 
 # +
 def llenar_nans_con_horario_alterno(fila, columna, columna_alt):
@@ -101,14 +172,7 @@ def llenar_nans_con_horario_alterno(fila, columna, columna_alt):
     return fila[columna]
 
 
-columnas = [
-    'humedad',
-    'nubosidad',
-    'presion_atmosferica',
-    'temperatura',
-    'velocidad_viendo',
-]
-for columna in columnas:
+for columna in columnas_con_horarios_opuestos:
     col_tempr = columna + '_temprano'
     col_tarde = columna + '_tarde'
     df[col_tempr] = df.apply(
@@ -118,6 +182,16 @@ for columna in columnas:
         lambda fila: llenar_nans_con_horario_alterno(fila, col_tarde, col_tempr), axis=1
     )
 # -
+
+# De esta forma logramos reducir la cantidad de missings
+
+# Desde la cantidad que taníamos inicialmente:
+
+missings_totales_iniciales
+
+# Hasta la actual:
+
+df.isna().sum(axis=1).sum()
 
 # ### Conversión de variables categóricas
 
