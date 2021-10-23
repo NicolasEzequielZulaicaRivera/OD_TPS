@@ -513,16 +513,14 @@ df_cat
 
 # En este análisis exploratorio observamos cómo se comportaba cada variable individualmente con el target que queríamos predecir, en este caso si iba a llover hamburguesas al día siguiente. En este caso tratamos de hacer una inducción de la relación de las variables con si en cada caso cumplía con el target propuesto, para luego poder usarlas para el análisis y descartar el resto.
 #
-# Como resultado destacamos 7 variables independientes entre sí, numéricas y categóricas, las cuales estarían directamente correlacionadas con la probabilidad de lluvia. Con estos datos, podemos construir una función baseline, que calcularía una sumatoria lineal con la correlación aproximada de cada variable con la lluvia al día siguiente, y de esta manera predice si al día siguiente va a llover o no.
+# Como resultado destacamos 1 condición categórica determinante (`llovieron_hamburguesas_hoy` sea que `si`) y otras condiciones 3 numéricas independientes entre sí, las cuales estarían directamente correlacionadas con la probabilidad de lluvia. Con estos datos, podemos construir una función baseline que haría una evaluación booleana, y de esta manera predice si al día siguiente va a llover o no.
 #
 # A continuación mostramos sus resultados.
 #
 
 # ## Baseline
 
-# Planteamos una funcion baseline como una combinacion lineal basada en los filtros del analisis.
-#
-# Es interesante notar que es un modelo similar a una red neuronal sin capas ( solo de entrada y salida ).
+# Planteamos una funcion baseline como condiciones booleanas basada en los filtros del analisis.
 
 
 def baseline_con_ifs(df):
