@@ -525,12 +525,12 @@ df_cat
 
 # +
 def funcion_baseline(row):
-    if df["llovieron_hamburguesas_hoy"] == "si":
-        if df['nubosidad_tarde'] > 7:
+    if row["llovieron_hamburguesas_hoy"] == "si":
+        if row['nubosidad_tarde'] > 7:
             return True
-        if df["mm_lluvia_dia"] > 10:
+        if row["mm_lluvia_dia"] > 10:
             return True
-        if df["humedad_tarde"] > 70:
+        if row["humedad_tarde"] > 70:
             return True
     return False
 
@@ -541,7 +541,7 @@ def baseline(df):
 
 # +
 
-_baseline = baseline_con_ifs(df)
+_baseline = baseline(df)
 _target = df["llovieron_hamburguesas_al_dia_siguiente"] == "si"
 
 (_baseline == _target).mean()
