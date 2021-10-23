@@ -523,12 +523,20 @@ df_cat
 # Planteamos una funcion baseline como condiciones booleanas basada en los filtros del analisis.
 
 
-def baseline_con_ifs(df):
-    return (df["llovieron_hamburguesas_hoy"] == "si") & (
-        (df['nubosidad_tarde'] > 7)
-        | (df["mm_lluvia_dia"] > 10)
-        | (df["humedad_tarde"] > 70)
-    )
+# +
+def funcion_baseline(row):
+    if df["llovieron_hamburguesas_hoy"] == "si":
+        if df['nubosidad_tarde'] > 7:
+            return True
+        if df["mm_lluvia_dia"] > 10:
+            return True
+        if df["humedad_tarde"] > 70:
+            return True
+    return False
+
+
+def baseline(df):
+    return df.apply(funcion_baseline, axis=1)
 
 
 # +
