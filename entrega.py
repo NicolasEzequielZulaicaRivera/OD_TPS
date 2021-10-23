@@ -525,50 +525,6 @@ df_cat
 # Es interesante notar que es un modelo similar a una red neuronal sin capas ( solo de entrada y salida ).
 
 
-# +
-# TODO: Esto va a ser borrado
-
-
-def baseline(df, threshold=1):
-    c = (
-        0.49 * (df["nubosidad_tarde"] > 7)
-        + 0.49 * (df["mm_lluvia_dia"] > 10)
-        + 0.46 * (df["llovieron_hamburguesas_hoy"] == "si")
-        + 0.45 * (df["humedad_tarde"] > 60)
-        + 0.44 * (df["horas_de_sol"] < 7)
-        + 0.31
-        * (
-            df["barrio"].isin(
-                [
-                    'Parque Patricios',
-                    'Villa Pueyrredón',
-                    'Saavedra',
-                    'Chacarita',
-                    'Recoleta',
-                    'Vélez Sársfield',
-                    'Barracas',
-                    'Villa del Parque',
-                    'Villa Devoto',
-                ]
-            )
-        )
-        + 0.10 * ((df['direccion_viento_temprano_num'] < 45))
-    )
-
-    return c > threshold
-
-
-# +
-
-_baseline = baseline(df)
-_target = df["llovieron_hamburguesas_al_dia_siguiente"] == "si"
-
-(_baseline == _target).mean()
-
-
-# -
-
-
 def baseline_con_ifs(df):
     return (df["llovieron_hamburguesas_hoy"] == "si") & (
         (df['nubosidad_tarde'] > 7)
