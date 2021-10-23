@@ -570,7 +570,7 @@ _target = df["llovieron_hamburguesas_al_dia_siguiente"] == "si"
 
 
 def baseline_con_ifs(df):
-    return (
+    return (df["llovieron_hamburguesas_hoy"] == "si") & (
         (df['nubosidad_tarde'] > 7)
         | (df["mm_lluvia_dia"] > 10)
         | (df["humedad_tarde"] > 70)
