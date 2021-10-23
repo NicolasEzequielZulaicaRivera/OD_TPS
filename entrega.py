@@ -281,6 +281,9 @@ def detNumeric(label, c=0, m=1, s=10, op=">"):
                     'llovieron_hamburguesas_al_dia_siguiente_n'
                 ].mean()
             )
+    plt.suptitle(
+        f"Probabilidad de que lluevan hamburguesas al dia siguiente segun {label}"
+    )
     plt.plot(x, y)
 
 
@@ -509,11 +512,64 @@ df_cat
 
 # Notamos que que lluevan hamburguesas aumenta la posibilidad considerablemente, al mismo tiempo ciertos barrios la disminuyen considerablemente.
 
+# ### Analisis Features Combinados
+
+# #### Features numericas segun llovieron_hamburguesas_hoy
+
+
+def detNumeric2(label, c=0, m=1, s=10, op=">"):
+    plt.figure(dpi=100)
+    x = []
+    y = []
+    z = []
+    for i in range(0, s):
+        x.append(i * m + c)
+        if op == ">":
+            y.append(
+                df[
+                    (df['llovieron_hamburguesas_hoy'] == 'si') & (df[label] > i * m + c)
+                ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean()
+            )
+            z.append(
+                df[
+                    (df['llovieron_hamburguesas_hoy'] == 'no') & (df[label] > i * m + c)
+                ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean()
+            )
+        else:
+            y.append(
+                df[
+                    (df['llovieron_hamburguesas_hoy'] == 'si') & (df[label] < i * m + c)
+                ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean()
+            )
+            z.append(
+                df[
+                    (df['llovieron_hamburguesas_hoy'] == 'no') & (df[label] < i * m + c)
+                ]['llovieron_hamburguesas_al_dia_siguiente_n'].mean()
+            )
+    plt.suptitle(
+        f"Probabilidad de que lluevan hamburguesas al dia siguiente segun {label}"
+    )
+    plt.plot(x, y)
+    plt.plot(x, z)
+    plt.legend(["llovieron hamburguesas hoy", "no llovieron hamburguesas hoy"])
+    plt.show()
+
+
+detNumeric2("humedad_tarde", 60, 5, 20)
+
+# Notamos que como aumenta la posibilidad mientras mas humedad haya segun si llovieron hamburguesas
+
+detNumeric2("horas_de_sol", 7, -0.5, 20, "<")
+
+# Notamos que como disminuye la posibilidad mientras mas horas de sol haya segun si llovieron hamburguesas
+
 # ## Conclusiones
 
 # En este análisis exploratorio observamos cómo se comportaba cada variable individualmente con el target que queríamos predecir, en este caso si iba a llover hamburguesas al día siguiente. En este caso tratamos de hacer una inducción de la relación de las variables con si en cada caso cumplía con el target propuesto, para luego poder usarlas para el análisis y descartar el resto.
 #
 # Como resultado destacamos 1 condición categórica determinante (`llovieron_hamburguesas_hoy` sea que `si`) y otras condiciones 3 numéricas independientes entre sí, las cuales estarían directamente correlacionadas con la probabilidad de lluvia. Con estos datos, podemos construir una función baseline que haría una evaluación booleana, y de esta manera predice si al día siguiente va a llover o no.
+#
+# Ademas vemos diferentes probabilidades para algunas features numericas segun si `llovieron_hamburguesas_hoy`
 #
 # A continuación mostramos sus resultados.
 #
@@ -526,12 +582,18 @@ df_cat
 # +
 def funcion_baseline(row):
     if row["llovieron_hamburguesas_hoy"] == "si":
-        if row['nubosidad_tarde'] > 7:
+        if row['horas_de_sol'] < 2:
             return True
-        if row["mm_lluvia_dia"] > 10:
+        if row['nubosidad_tarde'] > 7:
             return True
         if row["humedad_tarde"] > 70:
             return True
+
+    if row["mm_lluvia_dia"] > 10:
+        return True
+    if row["humedad_tarde"] > 80:
+        return True
+
     return False
 
 
