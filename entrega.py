@@ -532,7 +532,7 @@ df_cat
 def baseline(df, threshold=1):
     c = (
         0.49 * (df["nubosidad_tarde"] > 7)
-        + 0.49 * (df["mm_lluvia_dia"] > 5)
+        + 0.49 * (df["mm_lluvia_dia"] > 10)
         + 0.46 * (df["llovieron_hamburguesas_hoy"] == "si")
         + 0.45 * (df["humedad_tarde"] > 60)
         + 0.44 * (df["horas_de_sol"] < 7)
@@ -570,17 +570,11 @@ _target = df["llovieron_hamburguesas_al_dia_siguiente"] == "si"
 
 
 def baseline_con_ifs(df):
-    res = []
-    for index, row in df.iterrows():
-        va_a_llover_maniana = 0
-        if (
-            (row["nubosidad_tarde"] > 7)
-            or (row["mm_lluvia_dia"] > 5)
-            or (row["llovieron_hamburguesas_hoy"] == "si")
-        ):
-            va_a_llover_maniana = 1
-        res.append(va_a_llover_maniana)
-    return res
+    return (
+        (df['nubosidad_tarde'] > 7)
+        | (df["mm_lluvia_dia"] > 10)
+        | (df["humedad_tarde"] > 70)
+    )
 
 
 # +
