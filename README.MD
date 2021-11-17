@@ -9,6 +9,4 @@
 
 ## Entrega
 
-La entrega se encuentra en el archivo `entrega.py`
-
-Los análisis adicionales que no son de la presentación están en `limpieza.py` y `relaciones.py`
+Las entregas se encuentran en las carpetas correspondientes.
