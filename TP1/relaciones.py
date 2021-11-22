@@ -103,6 +103,7 @@ for label in labels:
 
 labels = df.select_dtypes(exclude=np.number).columns.tolist()
 labels.remove('dia')
+labels
 
 
 # ##### Analisis 1
