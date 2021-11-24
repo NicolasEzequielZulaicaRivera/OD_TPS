@@ -6,8 +6,14 @@ import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
 
-
 # ### Util
+
+showPrints = False
+showStatus = True
+
+if( showStatus ):
+    print('[#     ] Loading Util',end="\r")
+
 
 def join_df( feat, target ):
     return pd.merge(feat, target, on='id', how='inner')
@@ -20,9 +26,6 @@ def separate_df( joined ):
     )
 
 
-showPrints = False
-showStatus = True
-
 # ### Dataset
 
 df_feat = pd.read_csv("datasets/train_features.csv", low_memory=False)
@@ -30,12 +33,13 @@ df_targ = pd.read_csv("datasets/train_target.csv")
 
 df_all = join_df(df_feat,df_targ)
 
-if(showStatus):
-    print("Loaded Datasets")
 if(showPrints):
     df_all.info()
 
 # ## Tratamiento de Nulls
+
+if( showStatus ):
+    print('[##    ] Loading Null Preprocessing',end="\r")
 
 meanImputer =  SimpleImputer(strategy='most_frequent')
 meanImputer.fit( df_feat )
@@ -50,17 +54,17 @@ def reemplazarNulls( feat, inplace=False ):
     return _feat
 
 
-if(showStatus):
-    print('reemplazarNulls')
-
 # ### Dataset
 
 if(showPrints):
     print( df_all.isna().sum() > 0 )
     reemplazarNulls(df_feat).isna().sum().sum() == 0
 
-
 # ## Tratamiento de Categoricas
+
+if( showStatus ):
+    print('[####  ] Loading Categorical Preprocessing',end="\r")
+
 
 # +
 def reemplazarCategoricas_Barrio( feat ):
@@ -150,9 +154,6 @@ def reemplazarCategoricas( feat, inplace = False ):
     )
 
 
-if(showStatus):
-    print('reemplazarCategoricas')
-
 # ### Dataset
 
 if (showPrints): 
@@ -169,8 +170,11 @@ if (showPrints):
         print(label)
         print( cat_feat[label].unique() if label in cat_feat else "Not Found")
 
-
 # ## Tratamiento de Fechas
+
+if( showStatus ):
+    print('[##### ] Loading Date Preprocessing',end="\r")
+
 
 def reemplazarFechas( feat, inplace = False, removeOriginal=True ):
     
@@ -194,8 +198,11 @@ if (showPrints):
     dat_feat = reemplazarFechas(df_feat,removeOriginal=False)
     display(dat_feat[['dia','y','m','d']])
 
-
 # ## Tratamiento del Target
+
+if( showStatus ):
+    print('Loading Target Preprocessing',end="\r")
+
 
 def targetBooleano( target, inplace=False ):
     result = target.llovieron_hamburguesas_al_dia_siguiente == 'si'
@@ -206,3 +213,8 @@ def targetBooleano( target, inplace=False ):
 
 if (showPrints): 
     targetBooleano(df_targ)
+
+# ---
+
+if( showStatus ):
+    print('[######] All Done',end="\r")
