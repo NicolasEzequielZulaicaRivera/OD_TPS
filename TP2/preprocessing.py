@@ -5,14 +5,21 @@
 import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Lasso
+from joblib import dump, load
+from matplotlib import pyplot as plt
 
 # ### Util
 
 showPrints = False
 showStatus = True
 
+runTraining = False
+saveTraining = True
+
 if( showStatus ):
-    print('[#     ] Loading Util',end="\r")
+    print('[1/6] Loading Util ', end='\r')
 
 
 def join_df( feat, target ):
@@ -39,10 +46,15 @@ if(showPrints):
 # ## Tratamiento de Nulls
 
 if( showStatus ):
-    print('[##    ] Loading Null Preprocessing',end="\r")
+    print('[2/6] Loading Null Preprocessing ', end='\r')
 
-meanImputer =  SimpleImputer(strategy='most_frequent')
-meanImputer.fit( df_feat )
+if( runTraining ):
+    meanImputer =  SimpleImputer(strategy='most_frequent')
+    meanImputer.fit( df_feat )
+    if( saveTraining ):
+        dump(meanImputer, 'models/Preprocessing/meanImputer.sk') 
+else:
+    meanImputer = load('models/Preprocessing/meanImputer.sk')
 
 
 def reemplazarNulls( feat, inplace=False ):
@@ -63,7 +75,7 @@ if(showPrints):
 # ## Tratamiento de Categoricas
 
 if( showStatus ):
-    print('[####  ] Loading Categorical Preprocessing',end="\r")
+    print('[3/6] Loading Categorical Preprocessing ', end='\r')
 
 
 # +
@@ -173,7 +185,7 @@ if (showPrints):
 # ## Tratamiento de Fechas
 
 if( showStatus ):
-    print('[##### ] Loading Date Preprocessing',end="\r")
+    print('[4/6] Loading Date Preprocessing ', end='\r')
 
 
 def reemplazarFechas( feat, inplace = False, removeOriginal=True ):
@@ -201,7 +213,7 @@ if (showPrints):
 # ## Tratamiento del Target
 
 if( showStatus ):
-    print('Loading Target Preprocessing',end="\r")
+    print('[5/6]Loading Target Preprocessing ', end='\r')
 
 
 def targetBooleano( target, inplace=False ):
@@ -214,7 +226,62 @@ def targetBooleano( target, inplace=False ):
 if (showPrints): 
     targetBooleano(df_targ)
 
+# ## Regularizacion
+
+if( showStatus ):
+    print('[6/6] Loading Regularizaton ', end='\r')
+
+reg_feat = reemplazarFechas(reemplazarCategoricas(reemplazarNulls(df_feat)))
+
+if( runTraining ):
+    scaler = StandardScaler()
+    scaler.fit( reemplazarFechas(reemplazarCategoricas(df_feat)) )
+    if( saveTraining ):
+        dump(scaler, 'models/Preprocessing/scaler.sk') 
+else:
+    scaler = load('models/Preprocessing/scaler.sk')
+
+# +
+if( runTraining ):
+    lasso = Lasso(alpha=0.05)
+    lasso.fit( 
+        reg_feat,
+        targetBooleano(df_targ)
+    )
+    if( saveTraining ):
+        dump(lasso, 'models/Preprocessing/lasso.sk') 
+else:
+    lasso = load('models/Preprocessing/lasso.sk')
+    
+lasso_coef = pd.Series(lasso.coef_, index=reg_feat.columns).abs().sort_values()
+# -
+
+if (showPrints): 
+    print( f' Seleccionadas: {sum(lasso_coef != 0)}  Eliminadas: {sum(lasso_coef == 0)}')
+    lasso_coef.plot(kind="barh")
+
+
+def regularizar( feat, inplace=False, drop=sum(lasso_coef == 0) ):
+    _feat = feat
+    if( not inplace ):
+        _feat = feat.copy()
+        
+    # Normalize
+    _feat[:] = scaler.transform(feat)
+    
+    # Drop less representative columns
+    for i in range(0,drop):
+        d_col = lasso_coef.axes[0][i]
+        if d_col != 'id':
+            _feat.drop( d_col, 1, inplace=True )  
+    
+    return _feat
+
+
+if (showPrints):
+    display(regularizar(reg_feat))
+
 # ---
 
 if( showStatus ):
-    print('[######] All Done',end="\r")
+    print('[###] All Done                                                        ')
