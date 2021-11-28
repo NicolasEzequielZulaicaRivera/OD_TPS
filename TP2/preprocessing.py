@@ -19,7 +19,7 @@ runTraining = False
 saveTraining = True
 
 if( showStatus ):
-    print('[1/6] Loading Util ', end='\r')
+    print(f'[1/6] Loading Util {" "*20}', end='\r')
 
 
 def join_df( feat, target ):
@@ -46,7 +46,7 @@ if(showPrints):
 # ## Tratamiento de Nulls
 
 if( showStatus ):
-    print('[2/6] Loading Null Preprocessing ', end='\r')
+    print(f'[2/6] Loading Null Preprocessing {" "*20}', end='\r')
 
 if( runTraining ):
     meanImputer =  SimpleImputer(strategy='most_frequent')
@@ -75,7 +75,7 @@ if(showPrints):
 # ## Tratamiento de Categoricas
 
 if( showStatus ):
-    print('[3/6] Loading Categorical Preprocessing ', end='\r')
+    print(f'[3/6] Loading Categorical Preprocessing {" "*20}', end='\r')
 
 
 # +
@@ -185,7 +185,7 @@ if (showPrints):
 # ## Tratamiento de Fechas
 
 if( showStatus ):
-    print('[4/6] Loading Date Preprocessing ', end='\r')
+    print(f'[4/6] Loading Date Preprocessing {" "*20}', end='\r')
 
 
 def reemplazarFechas( feat, inplace = False, removeOriginal=True ):
@@ -213,7 +213,7 @@ if (showPrints):
 # ## Tratamiento del Target
 
 if( showStatus ):
-    print('[5/6]Loading Target Preprocessing ', end='\r')
+    print(f'[5/6]Loading Target Preprocessing {" "*20}', end='\r')
 
 
 def targetBooleano( target, inplace=False ):
@@ -229,7 +229,7 @@ if (showPrints):
 # ## Regularizacion
 
 if( showStatus ):
-    print('[6/6] Loading Regularizaton ', end='\r')
+    print(f'[6/6] Loading Regularizaton {" "*20}', end='\r')
 
 reg_feat = reemplazarFechas(reemplazarCategoricas(reemplazarNulls(df_feat)))
 
@@ -284,4 +284,4 @@ if (showPrints):
 # ---
 
 if( showStatus ):
-    print('[###] All Done                                                        ')
+    print(f'[###] All Done {" "*25}')
