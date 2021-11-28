@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 showPrints = False
 showStatus = True
 
-runTraining = False
+runTraining = True
 saveTraining = True
 
 if( showStatus ):
@@ -49,12 +49,12 @@ if( showStatus ):
     print(f'[2/6] Loading Null Preprocessing {" "*20}', end='\r')
 
 if( runTraining ):
-    meanImputer =  SimpleImputer(strategy='most_frequent')
-    meanImputer.fit( df_feat )
+    imputer =  SimpleImputer(strategy='most_frequent')
+    imputer.fit( df_feat )
     if( saveTraining ):
-        dump(meanImputer, 'models/Preprocessing/meanImputer.sk') 
+        dump(imputer, 'models/Preprocessing/imputer.sk') 
 else:
-    meanImputer = load('models/Preprocessing/meanImputer.sk')
+    imputer = load('models/Preprocessing/imputer.sk')
 
 
 def reemplazarNulls( feat, inplace=False ):
@@ -62,7 +62,7 @@ def reemplazarNulls( feat, inplace=False ):
     _feat = feat
     if( not inplace ):
         _feat = feat.copy()
-    _feat[:] = meanImputer.transform(feat)
+    _feat[:] = imputer.transform(_feat)
     return _feat
 
 
@@ -70,7 +70,8 @@ def reemplazarNulls( feat, inplace=False ):
 
 if(showPrints):
     print( df_all.isna().sum() > 0 )
-    reemplazarNulls(df_feat).isna().sum().sum() == 0
+    print( f'\n Nulls Reemplazados: {reemplazarNulls(df_feat).isna().sum().sum() == 0}' )
+    display(reemplazarNulls(df_feat))
 
 # ## Tratamiento de Categoricas
 
@@ -267,7 +268,7 @@ def regularizar( feat, inplace=False, drop=sum(lasso_coef == 0) ):
         _feat = feat.copy()
         
     # Normalize
-    _feat[:] = scaler.transform(feat)
+    _feat[:] = scaler.transform(_feat)
     
     # Drop less representative columns
     for i in range(0,drop):
