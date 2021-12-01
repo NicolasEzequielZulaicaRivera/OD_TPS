@@ -218,14 +218,17 @@ if( showStatus ):
 
 
 def targetBooleano( target, inplace=False ):
-    result = target.llovieron_hamburguesas_al_dia_siguiente == 'si'
-    if (inplace):
-        target = result
-    return result
+    _target = target
+    if( not inplace ):
+        _target = target.copy()
+        
+    _target.llovieron_hamburguesas_al_dia_siguiente = _target.llovieron_hamburguesas_al_dia_siguiente == 'si'
+    
+    return _target
 
 
 if (showPrints): 
-    targetBooleano(df_targ)
+    display(targetBooleano(df_targ))
 
 # ## Regularizacion
 
@@ -247,7 +250,7 @@ if( runTraining ):
     lasso = Lasso(alpha=0.05)
     lasso.fit( 
         reg_feat,
-        targetBooleano(df_targ)
+        targetBooleano(df_targ).llovieron_hamburguesas_al_dia_siguiente
     )
     if( saveTraining ):
         dump(lasso, 'models/Preprocessing/lasso.sk') 
