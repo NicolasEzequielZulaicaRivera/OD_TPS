@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 showPrints = False
 showStatus = True
 
-runTraining = True
+runTraining = False
 saveTraining = True
 
 if( showStatus ):
