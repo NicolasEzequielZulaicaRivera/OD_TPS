@@ -1,6 +1,6 @@
 # ### Imports
 
-from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, confusion_matrix
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, confusion_matrix, f1_score
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
@@ -24,7 +24,7 @@ def fmtAvg( num, total ):
 def score(target, predictions=None, probas=None):
     
     if( type(probas) != type(None) ):
-        print(f'AUC-ROC: {roc_auc_score(target, predictions)}')
+        print(f'AUC-ROC: {roc_auc_score(target, probas)}')
 
     if( type(predictions) != type(None) ):
         print(f'ACCURACY: {accuracy_score(target, predictions)}')
@@ -46,6 +46,20 @@ def score(target, predictions=None, probas=None):
         hmap.texts[3].set_text(fmtAvg(hmap.texts[3].get_text(),tarSize) + " TN")
 
 
+def score2(target, predictions=None, probas=None):
+    
+    if( type(probas) != type(None) ):
+        roc_auc = roc_auc_score(target, probas)
+
+    if( type(predictions) != type(None) ):
+        acc = accuracy_score(target, predictions)
+        prec = precision_score(target, predictions)
+        rec = recall_score(target, predictions)
+        f1 = f1_score(target, predictions)
+        
+    return ( roc_auc, acc, prec, rec, f1 )
+
+
 true = pd.Series([True,True,True,False,False,False])
 pred = pd.Series([True,True,True,False,False,True])
 prob = np.array([[0.9,0.8,0.7,0.3,0.2,0.6]])
@@ -55,6 +69,7 @@ if( showPrints ):
 
 if( showPrints ):
     display(score(true,pred,prob))
+    display(score2(true,pred,prob))
 
 # ### Get Feat/ Targ
 
