@@ -43,6 +43,8 @@ df_all = join_df(df_feat,df_targ)
 if(showPrints):
     df_all.info()
 
+df_feat.columns
+
 # ## Tratamiento de Nulls
 
 if( showStatus ):
