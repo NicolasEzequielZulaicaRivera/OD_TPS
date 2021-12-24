@@ -35,7 +35,7 @@ def separate_df( joined ):
 
 # ### Dataset
 
-df_feat = pd.read_csv("datasets/train_features.csv", low_memory=False)
+df_feat = pd.read_csv("datasets/train_features.csv", low_memory=False).set_index('id')
 df_targ = pd.read_csv("datasets/train_target.csv")
 
 df_all = join_df(df_feat,df_targ)
