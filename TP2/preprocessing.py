@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 
 # ### Util
 
-showPrints = True
+showPrints = False
 showStatus = True
 
 runTraining = False

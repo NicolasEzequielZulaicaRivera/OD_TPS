@@ -217,14 +217,25 @@ df_targ = pd.read_csv("datasets/train_target.csv")
 
 # ### Divide Train / Val
 
-def train_val( feat, targ ):
-    return train_test_split(
+def train_val( feat, targ, targSeries = False ):
+    tf, vf, tt, vt = train_test_split(
         feat,
         targ,
         test_size=0.1,
         stratify=targ.llovieron_hamburguesas_al_dia_siguiente,
         random_state=1
     )
+    
+    if(targSeries):
+        tt = tt.llovieron_hamburguesas_al_dia_siguiente
+        vt = vt.llovieron_hamburguesas_al_dia_siguiente
+    
+    return tf, vf, tt, vt
 
 
-train_feat, holdout_feat, train_target, holdout_target = train_val( df_feat, df_targ )
+if(showPrints):
+    train_feat, holdout_feat, train_target, holdout_target = train_val( df_feat, df_targ, True )
+    display(train_feat)
+    display(holdout_feat)
+    display(train_target)
+    display(holdout_target)
