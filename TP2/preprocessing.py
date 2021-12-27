@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 
 # ### Util
 
-showPrints = False
+showPrints = True
 showStatus = True
 
 runTraining = False
@@ -68,10 +68,28 @@ def reemplazarNulls( feat, inplace=False ):
     return _feat
 
 
+def reemplazarNullsNum( feat, inplace=False ):
+    _feat = feat
+    if( not inplace ):
+        _feat = feat.copy()
+        
+    numLabels = df_feat.select_dtypes(include=np.number).columns.tolist()
+    
+    for label in numLabels:
+        if label not in _feat:
+            continue
+        # anadir feture que marca missing
+        # y poner esta como el mean
+        _feat["missing_"+label] = _feat[label].isna()
+        _feat[label] = _feat[label].fillna( df_feat[label].mean() )
+    
+    return _feat
+
+
 # ### Dataset
 
 if(showPrints):
-    print( df_all.isna().sum() > 0 )
+    print( df_all.isna().mean()*100 )
     print( f'\n Nulls Reemplazados: {reemplazarNulls(df_feat).isna().sum().sum() == 0}' )
     display(reemplazarNulls(df_feat))
 
@@ -290,4 +308,93 @@ if (showPrints):
 # ---
 
 if( showStatus ):
-    print(f'[###] All Done {" "*25}')
+    print(f'[###] Initial Preprocessings Done {" "*25}')
+
+# ---
+
+# ## One Hot Encoding
+
+if( showStatus ):
+    print(f'[1/3] Loading One Hot Encoding {" "*20}', end='\r')
+
+
+def reemplazarCategoricas_OHE( feat, inplace = False ):
+    
+    categoricas = ['barrio','direccion_viento_temprano','direccion_viento_tarde','rafaga_viento_max_direccion','llovieron_hamburguesas_hoy']
+    
+    _feat = feat
+    if( not inplace ):
+        _feat = feat.copy()
+    
+    for label in categoricas:
+        _feat[label] = _feat[label].str.lower()
+        
+    _feat = pd.get_dummies(_feat,columns = categoricas)
+        
+    return _feat
+
+
+if(showPrints):
+    ohercat = reemplazarCategoricas_OHE(df_feat)
+    ohernull =reemplazarNullsNum(ohercat)
+    print( f'{ohernull.isna().sum().sum()} missings' )
+    display(ohernull)
+    print("-------")
+    ohernull.info(verbose=True)
+
+# ## Hashing Trick
+
+if( showStatus ):
+    print(f'[2/3] Loading Hashing Trick {" "*20}', end='\r')
+
+
+def hash_col(df, col, N):
+    def hashrow(x): tmp = [((hash(x)*(i+1)) % (N+1)) for i in range(N)]; return pd.Series(tmp,index=cols)
+    cols = [col + "_" + str(i) for i in range(N)]
+    df[cols] = df[col].apply(hashrow)
+    df.drop(col,axis=1, inplace=True)
+    return df
+
+
+def reemplazarCategoricas_HashTrick( feat, inplace = False ):
+    
+    categoricas = ['barrio','direccion_viento_temprano','direccion_viento_tarde','rafaga_viento_max_direccion']
+    oheable = ['llovieron_hamburguesas_hoy']
+    
+    _feat = feat
+    if( not inplace ):
+        _feat = feat.copy()
+    
+    for label in oheable:
+        _feat[label] = _feat[label].str.lower()
+    _feat = pd.get_dummies(_feat,columns = oheable)
+    
+    for label in categoricas:
+        _feat[label] = _feat[label].str.lower()
+        hash_col(_feat,label,4)
+        
+    return _feat
+
+
+if(showPrints):
+    htrcat = reemplazarCategoricas_HashTrick(df_feat)
+    htrnull = reemplazarNullsNum(htrcat)
+    print( f'{htrnull.isna().sum().sum()} missings' )  
+    display(htrnull)
+    print("-------")
+    htrnull.info(verbose=True)
+    # This can take 2 min
+
+# ## Seleccion de Variables
+
+if( showStatus ):
+    print(f'[3/3] Loading Ridge Variable Selection & Weight {" "*20}', end='\r')
+
+# ### Ridge & Pesos
+
+
+
+# ---
+
+if( showStatus ):
+    print(f'[###] Aditional Preprocessings Done {" "*50}')
