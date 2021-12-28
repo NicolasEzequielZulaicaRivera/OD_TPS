@@ -7,16 +7,17 @@ import numpy as np
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Lasso
+from sklearn.feature_selection import SelectKBest, f_classif as f_classif
 from joblib import dump, load
 from matplotlib import pyplot as plt
 
 # ### Util
 
-showPrints = False
-showStatus = True
+showPrints = False # False
+showStatus = True # True
 
-runTraining = False
-saveTraining = True
+runTraining = False # False
+saveTraining = True 
 
 if( showStatus ):
     print(f'[1/6] Loading Util {" "*20}', end='\r')
@@ -348,12 +349,50 @@ def reemplazarCategoricas_OHE( feat, inplace = False ):
 
 
 if(showPrints):
-    ohercat = reemplazarCategoricas_OHE(df_feat)
+    ohercat = reemplazarFechas(reemplazarCategoricas_OHE(df_feat))
     ohernull =reemplazarNullsNum(ohercat)
     print( f'{ohernull.isna().sum().sum()} missings' )
     display(ohernull)
     print("-------")
     ohernull.info(verbose=True)
+
+# ### Seleccionar variables
+
+if( runTraining ):
+    ohe_varsel = SelectKBest(f_classif, k=20).fit(ohernull, df_targ.llovieron_hamburguesas_al_dia_siguiente)
+    if(saveTraining):
+        dump(ohe_varsel, 'models/Preprocessing/ohe_varsel.sk') 
+else:
+    ohe_varsel = load('models/Preprocessing/ohe_varsel.sk')
+
+ohe_feats = pd.DataFrame(
+    data={
+        'feature':ohe_varsel.feature_names_in_,
+        'pvalue':ohe_varsel.pvalues_,
+        'scores':ohe_varsel.scores_,
+    }
+).sort_values(by=['scores'], ascending=False)
+
+if(showPrints):
+    display(
+        ohe_feats.head(20)
+    )
+
+
+def keepFeat_OHE( feat, keep = 20, inplace = False ):
+
+    res = feat[ ohe_feats.head(keep).feature.array  ]
+    
+    if(inplace):
+        feat = res
+        
+    return res
+
+
+if(showPrints):
+    display(
+        keepFeat_OHE( ohernull )
+    )
 
 # ## Hashing Trick
 
@@ -389,14 +428,42 @@ def reemplazarCategoricas_HashTrick( feat, inplace = False ):
     return _feat
 
 
-if(showPrints):
-    htrcat = reemplazarCategoricas_HashTrick(df_feat)
+if(showPrints or runTraining):
+    # This can take 2 min
+    htrcat = reemplazarFechas(reemplazarCategoricas_HashTrick(df_feat))
     htrnull = reemplazarNullsNum(htrcat)
+
+if(showPrints):
     print( f'{htrnull.isna().sum().sum()} missings' )  
     display(htrnull)
     print("-------")
     htrnull.info(verbose=True)
-    # This can take 2 min
+
+# ### Normalizar
+
+if( runTraining ):
+    scaler_ht = StandardScaler()
+    scaler_ht.fit( htrnull )
+    if( saveTraining ):
+        dump(scaler_ht, 'models/Preprocessing/scaler_ht.sk') 
+else:
+    scaler_ht = load('models/Preprocessing/scaler_ht.sk')
+
+
+def normalizar_HashTrick( feat, inplace = False ):
+    _feat = feat
+    if( not inplace ):
+        _feat = feat.copy()
+        
+    # Normalize
+    _feat[:] = scaler_ht.transform(_feat)
+    
+    return _feat
+
+
+if( showPrints ):
+    htr2 = normalizar_HashTrick(htrnull)
+    display(htr2)
 
 # ---
 
