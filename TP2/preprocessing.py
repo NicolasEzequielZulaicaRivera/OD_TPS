@@ -285,13 +285,25 @@ if (showPrints):
     lasso_coef.plot(kind="barh")
 
 
-def regularizar( feat, inplace=False, drop=sum(lasso_coef == 0) ):
+def stdScaleFunc( x, c1, c2=50 ):
+    return x * (1-c1*c2)
+
+
+def regularizar( feat, inplace=False, drop=sum(lasso_coef == 0), scaleFunc=None ):
     _feat = feat
     if( not inplace ):
         _feat = feat.copy()
         
     # Normalize
     _feat[:] = scaler.transform(_feat)
+    
+    # Scale
+    if( type(scaleFunc) != type(None) ):
+        if( scaleFunc == 'std' ):
+            scaleFunc = stdScaleFunc
+        for i in range(drop+1,len(lasso_coef)):
+            j = lasso_coef.axes[0][i]
+            _feat[ j ] = stdScaleFunc( _feat[ j ], lasso_coef[i] )
     
     # Drop less representative columns
     for i in range(0,drop):
@@ -304,6 +316,7 @@ def regularizar( feat, inplace=False, drop=sum(lasso_coef == 0) ):
 
 if (showPrints):
     display(regularizar(reg_feat))
+    display(regularizar(reg_feat, scaleFunc='std'))
 
 # ---
 
@@ -315,7 +328,7 @@ if( showStatus ):
 # ## One Hot Encoding
 
 if( showStatus ):
-    print(f'[1/3] Loading One Hot Encoding {" "*20}', end='\r')
+    print(f'[1/2] Loading One Hot Encoding {" "*20}', end='\r')
 
 
 def reemplazarCategoricas_OHE( feat, inplace = False ):
@@ -345,7 +358,7 @@ if(showPrints):
 # ## Hashing Trick
 
 if( showStatus ):
-    print(f'[2/3] Loading Hashing Trick {" "*20}', end='\r')
+    print(f'[2/2] Loading Hashing Trick {" "*20}', end='\r')
 
 
 def hash_col(df, col, N):
@@ -384,15 +397,6 @@ if(showPrints):
     print("-------")
     htrnull.info(verbose=True)
     # This can take 2 min
-
-# ## Seleccion de Variables
-
-if( showStatus ):
-    print(f'[3/3] Loading Ridge Variable Selection & Weight {" "*20}', end='\r')
-
-# ### Ridge & Pesos
-
-
 
 # ---
 
