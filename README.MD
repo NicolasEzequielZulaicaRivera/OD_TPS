@@ -4,7 +4,7 @@
 
 ## Alumnos
 
-- 100199 - Ariel Leandro Aguirre
+- <s>100199 - Ariel Leandro Aguirre</s>
 - 105774 - Nicolas Ezequiel Zulaica Rivera
 
 ## Entrega
